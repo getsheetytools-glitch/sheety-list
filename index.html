@@ -314,7 +314,11 @@
   </div>
   <div class="field">
     <label class="field-lbl">Group</label>
-    <input class="field-input" id="f-group" placeholder="e.g. Project, Chore, One-off">
+    <div class="cat-combo">
+      <input class="cat-input" id="f-group" placeholder="e.g. Project, Chore, One-off" autocomplete="off"
+        oninput="filterGroupDrop()" onfocus="showGroupDrop()" onblur="hideGroupDrop()">
+      <div class="cat-drop" id="group-drop"></div>
+    </div>
   </div>
   <div class="field">
     <label class="field-lbl">Priority</label>
@@ -378,7 +382,7 @@ const SHEETS = (() => {
   const TITLE     = 'My Sheety List';
   const TASK_TAB  = 'Tasks';
   const CAT_TAB   = 'Categories';
-  const TASK_HDRS = ['category','group','title','priority','due','notes','frequency','last_completed'];
+  const TASK_HDRS = ['category','group','title','priority','due','notes','frequency','last_completed','completed'];
   const CAT_HDRS  = ['name','color'];
 
   let token=null, sheetId=null, taskTabId=0, catTabId=0, tclient=null;
@@ -442,14 +446,14 @@ const SHEETS = (() => {
   function row2task(row,n) {
     return { _row:n, category:(row[0]||'').trim(), group:(row[1]||'').trim(), title:(row[2]||'').trim(),
       priority:(row[3]||'Med').trim(), due:(row[4]||'').trim(), notes:(row[5]||'').trim(),
-      frequency:(row[6]||'').trim(), last_completed:(row[7]||'').trim() };
+      frequency:(row[6]||'').trim(), last_completed:(row[7]||'').trim(), completed:(row[8]||'').trim() };
   }
   function task2row(t) {
-    return [t.category,t.group,t.title,t.priority,t.due||'',t.notes||'',t.frequency||'',t.last_completed||''];
+    return [t.category,t.group,t.title,t.priority,t.due||'',t.notes||'',t.frequency||'',t.last_completed||'',t.completed||''];
   }
 
   async function loadTasks() {
-    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:H`);
+    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:I`);
     return (r.values||[]).slice(1).map((row,i)=>row2task(row,i+2)).filter(t=>t.title);
   }
   async function loadCats() {
@@ -457,13 +461,13 @@ const SHEETS = (() => {
     return (r.values||[]).slice(1).map((row,i)=>({ _row:i+2, name:(row[0]||'').trim(), color:(row[1]||'#888').trim() })).filter(c=>c.name);
   }
   async function addTask(task) {
-    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:H:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:I:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
       { method:'POST', body:JSON.stringify({ values:[task2row(task)] }) });
     const m = r.updates.updatedRange.match(/(\d+)$/);
     return m ? parseInt(m[1]) : null;
   }
   async function updateTask(task) {
-    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A${task._row}:H${task._row}?valueInputOption=RAW`,
+    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A${task._row}:I${task._row}?valueInputOption=RAW`,
       { method:'PUT', body:JSON.stringify({ values:[task2row(task)] }) });
   }
   async function deleteRow(tabId, rowNum) {
@@ -488,7 +492,7 @@ const PRI_COLOR = { critical:'#ff3b30', high:'#f97316', med:'#3b82f6', low:'#6b7
 const PALETTE   = ['#8b5cf6','#0ea5e9','#f43f5e','#10b981','#f97316','#eab308','#ec4899','#14b8a6','#6366f1','#84cc16'];
 const SNOOZE    = { daily:1, weekdays:1, weekly:7, biweekly:14, monthly:30, bimonthly:60, quarterly:90, semiannual:180, annual:365, 'annual / 5yr':365 };
 
-let S = { tasks:[], cats:[], cat:'', group:'All', expanded:null, editing:null, newCatColor:PALETTE[0] };
+let S = { tasks:[], cats:[], cat:'', group:'All', expanded:null, editing:null, newCatColor:PALETTE[0], showCompleted:false };
 
 // ════════════════════════════════════════════════
 // INSTALL BANNER
@@ -652,7 +656,8 @@ function renderList() {
   const filtered=S.tasks.filter(t=>
     t.category===S.cat &&
     (S.group==='All'||t.group===S.group) &&
-    (!q||t.title.toLowerCase().includes(q)||t.notes.toLowerCase().includes(q))
+    (!q||t.title.toLowerCase().includes(q)||t.notes.toLowerCase().includes(q)) &&
+    (S.showCompleted || t.completed !== 'Y')
   ).sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
 
   if (!filtered.length) {
@@ -683,22 +688,24 @@ function cardHtml(t) {
   const bdr = p==='critical'?pc:pc+'80';
   const ov  = isOverdue(t);
   const sn  = isSnoozed(t);
+  const done= t.completed==='Y';
   const exp = S.expanded===t._row;
   const dueLbl  = t.due       ? `<span class="due-lbl ${ov?'late':''}">${ov?'⚠ ':''}${fmtDue(t.due)}</span>` : '';
   const freqLbl = t.frequency ? `<span class="freq-lbl">${t.frequency}${sn?' ✓':''}</span>` : '';
   const badge   = `<span class="badge" style="background:${p==='critical'?pc:pc+'22'};color:${p==='critical'?'#fff':pc}">${t.priority.toUpperCase()}</span>`;
-  const notes   = t.notes     ? `<div class="card-notes">${t.notes}</div>` : '';
+  const notes   = t.notes     ? `<div class="card-notes" style="${done?'text-decoration:line-through;opacity:0.5':''}">${t.notes}</div>` : '';
   const acts    = exp ? `<div class="card-actions on">
-    ${t.frequency?`<button class="act-btn" style="border-color:var(--green);color:var(--green)" onclick="markDone(${t._row})">✓ Done Today</button>`:''}
+    ${!done ? `<button class="act-btn" style="border-color:var(--green);color:var(--green)" onclick="markTaskDone(${t._row})">✓ Done</button>` : `<button class="act-btn" style="border-color:var(--muted);color:var(--muted)" onclick="unmarkTaskDone(${t._row})">↩ Undo Done</button>`}
+    ${t.frequency&&!done?`<button class="act-btn" style="border-color:#10b981;color:#10b981" onclick="markDone(${t._row})">✓ Done Today</button>`:''}
     <button class="act-btn" style="border-color:var(--med);color:var(--med)" onclick="openEdit(${t._row})">✏ Edit</button>
     <button class="act-btn" style="border-color:${pc};color:${pc}" onclick="cyclePri(${t._row})">↕ Priority</button>
-    <button class="act-btn" style="border-color:var(--crit);color:var(--crit)" onclick="delTask(${t._row})">✕ Delete</button>
+    <button class="act-btn" style="border-color:var(--crit);color:var(--crit)" onclick="delTask(${t._row})">🗑 Delete</button>
   </div>` : '';
   return `<div class="card-wrap" id="wrap-${t._row}">
     <div class="delete-bg">🗑</div>
-    <div class="task-card ${ov?'overdue':''}" id="card-${t._row}" style="border-left-color:${bdr}" onclick="toggleExp(${t._row})">
+    <div class="task-card ${ov&&!done?'overdue':''}" id="card-${t._row}" style="border-left-color:${done?'#333':bdr};opacity:${done?'0.5':'1'}" onclick="toggleExp(${t._row})">
       <div class="card-top">
-        <span class="card-title">${t.title}</span>
+        <span class="card-title" style="${done?'text-decoration:line-through;color:var(--muted)':''}">${t.title}</span>
         <div class="card-meta">${dueLbl}${freqLbl}${badge}</div>
       </div>
       ${notes}${acts}
@@ -733,6 +740,18 @@ function toggleSearch() {
   b.classList.toggle('on');
   if(b.classList.contains('on')) document.getElementById('search-input').focus();
   else { document.getElementById('search-input').value=''; render(); }
+}
+async function markTaskDone(rowId) {
+  const t=S.tasks.find(t=>t._row===rowId); if(!t) return;
+  t.completed='Y'; toast('marking done...');
+  try { await SHEETS.updateTask(t); toast('done ✓'); } catch(e){ console.error(e); alert('Save failed.'); }
+  S.expanded=null; render();
+}
+async function unmarkTaskDone(rowId) {
+  const t=S.tasks.find(t=>t._row===rowId); if(!t) return;
+  t.completed=''; toast('undoing...');
+  try { await SHEETS.updateTask(t); toast('restored ✓'); } catch(e){ console.error(e); alert('Save failed.'); }
+  S.expanded=null; render();
 }
 async function markDone(rowId) {
   const t=S.tasks.find(t=>t._row===rowId); if(!t) return;
@@ -775,6 +794,21 @@ async function quickAddCat(name) {
   try { await SHEETS.addCat(name,color); S.cats=await SHEETS.loadCats(); document.getElementById('f-cat').value=name; render(); }
   catch(e){ console.error(e); }
 }
+
+// ════════════════════════════════════════════════
+// GROUP COMBO
+// ════════════════════════════════════════════════
+function showGroupDrop() { filterGroupDrop(); document.getElementById('group-drop').classList.add('on'); }
+function hideGroupDrop() { setTimeout(()=>document.getElementById('group-drop').classList.remove('on'),150); }
+function filterGroupDrop() {
+  const val=document.getElementById('f-group').value.toLowerCase();
+  const cat=document.getElementById('f-cat').value||S.cat;
+  const groups=[...new Set(S.tasks.filter(t=>!cat||t.category.toLowerCase()===cat.toLowerCase()).map(t=>t.group).filter(Boolean))];
+  const matches=groups.filter(g=>g.toLowerCase().includes(val));
+  document.getElementById('group-drop').innerHTML=
+    matches.map(g=>`<div class="cat-opt" onmousedown="pickGroup('${g.replace(/'/g,"\\'")}')"><div class="cat-dot" style="background:var(--muted)"></div>${g}</div>`).join('');
+}
+function pickGroup(name) { document.getElementById('f-group').value=name; }
 
 // ════════════════════════════════════════════════
 // ADD / EDIT
@@ -883,9 +917,12 @@ function openBriefing() {
 
   const tasks = S.tasks.filter(t=>!suppressed(t));
 
-  // Today's focus — overdue or date-due
-  const focus = tasks.filter(t=>isOverdue(t)||isDue(t.due))
-    .sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
+  // Today's focus — overdue or date-due, but NOT daily recurring tasks
+  const DAILY_FREQS = new Set(['daily','weekdays']);
+  const focus = tasks.filter(t=>
+    (isOverdue(t)||isDue(t.due)) &&
+    !DAILY_FREQS.has(t.frequency.toLowerCase())
+  ).sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
 
   // Rotation — active recurring tasks not snoozed
   const FREQ_DAILY     = new Set(['daily','weekdays']);
@@ -935,7 +972,7 @@ function openBriefing() {
     const freq= showFreq&&t.frequency ? `<span class="freq-lbl">${t.frequency}</span>` : '';
     const cat = showCat ? `<span class="badge" style="background:${catColor(t.category)}18;color:${catColor(t.category)};font-size:10px">${t.category}</span>` : '';
     const badge= `<span class="badge" style="background:${p==='critical'?pc:pc+'22'};color:${p==='critical'?'#fff':pc}">${t.priority.toUpperCase()}</span>`;
-    return `<div class="briefing-card" style="border-left-color:${bdr}">
+    return `<div class="briefing-card" style="border-left-color:${bdr};cursor:pointer" onclick="openEditFromBriefing(${t._row})">
       <div class="briefing-card-title">${t.title}</div>
       <div class="briefing-card-meta">${due}${freq}${cat}${badge}</div>
     </div>`;
@@ -964,6 +1001,7 @@ function openBriefing() {
 // ════════════════════════════════════════════════
 function openSheet(id) { document.getElementById('overlay').classList.add('on'); document.getElementById(id).classList.add('on'); }
 function closeSheets() { document.getElementById('overlay').classList.remove('on'); document.querySelectorAll('.bsheet').forEach(s=>s.classList.remove('on')); }
+function openEditFromBriefing(rowId) { closeSheets(); setTimeout(()=>openEdit(rowId), 120); }
 </script>
 <script>
   if ('serviceWorker' in navigator) {
