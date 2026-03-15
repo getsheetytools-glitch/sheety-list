@@ -290,8 +290,11 @@
 <!-- Briefing sheet -->
 <div class="bsheet" id="briefing-sheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-ttl">☀ Today's Briefing</div>
-  <div id="briefing-content" style="padding: 0 24px 8px;"></div>
+  <div style="display:flex;align-items:center;padding:0 24px 16px;border-bottom:1px solid var(--border);margin-bottom:0;">
+    <span style="font-family:'Lora',serif;font-size:20px;flex:1;">☀ Today's Briefing</span>
+    <button onclick="shuffleBriefing()" style="background:var(--surf2);border:1px solid var(--border);color:var(--dim);padding:8px 14px;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:0.04em;">⇄ Shuffle</button>
+  </div>
+  <div id="briefing-content" style="padding: 8px 24px 8px;"></div>
   <div class="sheet-btns">
     <button class="sht-btn sec" onclick="closeSheets()">Done</button>
   </div>
@@ -439,8 +442,18 @@ const SHEETS = (() => {
     taskTabId = await ensureTab(TASK_TAB, TASK_HDRS);
     catTabId  = await ensureTab(CAT_TAB,  CAT_HDRS);
     if (isNew) {
-      await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A2:B3?valueInputOption=RAW`,
-        { method:'PUT', body:JSON.stringify({ values:[['Personal','#8b5cf6'],['Work','#0ea5e9']] }) });
+      await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A2:B4?valueInputOption=RAW`,
+        { method:'PUT', body:JSON.stringify({ values:[
+          ['Personal','#8b5cf6'],
+          ['Work','#0ea5e9'],
+          ['Productivity','#10b981']
+        ]}) });
+      // Seed PWA recommendation task
+      await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A2:I2?valueInputOption=RAW`,
+        { method:'PUT', body:JSON.stringify({ values:[[
+          'Productivity','Tips','Try the My Sheety List app on your phone — add it to your home screen for the full experience!',
+          'Med','','','','',''
+        ]]}) });
     }
   }
 
@@ -903,6 +916,15 @@ async function deleteCat(rowNum) {
 // BRIEFING
 // ════════════════════════════════════════════════
 function openBriefing() {
+  renderBriefingContent();
+  openSheet('briefing-sheet');
+}
+
+function shuffleBriefing() {
+  renderBriefingContent();
+}
+
+function renderBriefingContent() {
   const PRI_WEIGHT  = { critical:8, high:5, med:2, low:1 };
   const SNOOZE_DAYS = { daily:1, weekdays:1, weekly:7, biweekly:14, monthly:30, bimonthly:60, quarterly:90, semiannual:180, annual:365, 'annual / 5yr':365 };
   const isWeekend   = [0,6].includes(new Date().getDay());
@@ -1018,7 +1040,6 @@ function openBriefing() {
   ].join('');
 
   document.getElementById('briefing-content').innerHTML = html;
-  openSheet('briefing-sheet');
 }
 
 // ════════════════════════════════════════════════
