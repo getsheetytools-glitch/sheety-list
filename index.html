@@ -13,7 +13,7 @@
   <title>My Sheety List — Sheety.tools</title>
   <script>
     // Force reload if cached version is stale (iOS PWA fix)
-    const APP_VERSION = '2026-03-15-v1';
+    const APP_VERSION = '2026-03-15-v2';
     if (localStorage.getItem('app-version') !== APP_VERSION) {
       localStorage.setItem('app-version', APP_VERSION);
       if (localStorage.getItem('app-version-loaded')) {
@@ -410,6 +410,29 @@
   </div>
 </div>
 
+<!-- Snooze sheet -->
+<div class="bsheet" id="snooze-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-ttl">💤 Snooze Until</div>
+  <div style="padding:0 24px 16px;">
+    <p style="font-size:13px;color:var(--dim);margin-bottom:16px;" id="snooze-task-name"></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <button class="sht-btn sec" onclick="applySnoozePreset(3)">3 days</button>
+      <button class="sht-btn sec" onclick="applySnoozePreset(7)">1 week</button>
+      <button class="sht-btn sec" onclick="applySnoozePreset(14)">2 weeks</button>
+      <button class="sht-btn sec" onclick="applySnoozeEndOfMonth()">End of month</button>
+    </div>
+    <div class="field" style="padding:0;">
+      <label class="field-lbl">Or pick a specific date</label>
+      <input class="field-input" id="snooze-date" type="date">
+    </div>
+  </div>
+  <div class="sheet-btns">
+    <button class="sht-btn sec" style="border-color:var(--crit);color:var(--crit)" onclick="clearSnooze()">Clear Snooze</button>
+    <button class="sht-btn pri" onclick="applySnooze()">Snooze</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -422,7 +445,7 @@ const SHEETS = (() => {
   const TITLE     = 'My Sheety List';
   const TASK_TAB  = 'Tasks';
   const CAT_TAB   = 'Categories';
-  const TASK_HDRS = ['category','group','title','priority','due','notes','frequency','last_completed','completed'];
+  const TASK_HDRS = ['category','group','title','priority','due','notes','frequency','last_completed','completed','snooze_until'];
   const CAT_HDRS  = ['name','color','ignore_weekends','ignore_weekdays','no_daytime','no_nighttime','no_diversions','no_rotation'];
 
   let token=null, sheetId=null, taskTabId=0, catTabId=0, tclient=null;
@@ -496,14 +519,16 @@ const SHEETS = (() => {
   function row2task(row,n) {
     return { _row:n, category:(row[0]||'').trim(), group:(row[1]||'').trim(), title:(row[2]||'').trim(),
       priority:(row[3]||'Med').trim(), due:(row[4]||'').trim(), notes:(row[5]||'').trim(),
-      frequency:(row[6]||'').trim(), last_completed:(row[7]||'').trim(), completed:(row[8]||'').trim() };
+      frequency:(row[6]||'').trim(), last_completed:(row[7]||'').trim(),
+      completed:(row[8]||'').trim(), snooze_until:(row[9]||'').trim() };
   }
   function task2row(t) {
-    return [t.category,t.group,t.title,t.priority,t.due||'',t.notes||'',t.frequency||'',t.last_completed||'',t.completed||''];
+    return [t.category,t.group,t.title,t.priority,t.due||'',t.notes||'',t.frequency||'',
+      t.last_completed||'',t.completed||'',t.snooze_until||''];
   }
 
   async function loadTasks() {
-    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:I`);
+    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:J`);
     return (r.values||[]).slice(1).map((row,i)=>row2task(row,i+2)).filter(t=>t.title);
   }
   async function loadCats() {
@@ -531,13 +556,15 @@ const SHEETS = (() => {
       { method:'PUT', body:JSON.stringify({ values:[cat2row(c)] }) });
   }
   async function addTask(task) {
-    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:I:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:J:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
       { method:'POST', body:JSON.stringify({ values:[task2row(task)] }) });
     const m = r.updates.updatedRange.match(/(\d+)$/);
     return m ? parseInt(m[1]) : null;
   }
   async function updateTask(task) {
-    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A${task._row}:I${task._row}?valueInputOption=RAW`,
+    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A${task._row}:J${task._row}?valueInputOption=RAW`,
+      { method:'PUT', body:JSON.stringify({ values:[task2row(task)] }) });
+  }
       { method:'PUT', body:JSON.stringify({ values:[task2row(task)] }) });
   }
   async function deleteRow(tabId, rowNum) {
@@ -669,6 +696,11 @@ function isDue(due) {
   if (!due) return false;
   return new Date(due+'T00:00:00') <= new Date(new Date().toDateString());
 }
+function isSnoozedUntil(t) {
+  if (!t.snooze_until) return false;
+  try { return new Date(t.snooze_until+'T00:00:00') > new Date(new Date().toDateString()); }
+  catch { return false; }
+}
 function isSnoozed(t) {
   const f=t.frequency.toLowerCase();
   if (!f||!t.last_completed) return false;
@@ -785,7 +817,8 @@ function renderList() {
     t.category===S.cat &&
     (S.group==='All'||t.group===S.group) &&
     (!q||t.title.toLowerCase().includes(q)||t.notes.toLowerCase().includes(q)) &&
-    (S.showCompleted || t.completed !== 'Y')
+    (S.showCompleted || t.completed !== 'Y') &&
+    !isSnoozedUntil(t)
   ).sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
 
   if (!filtered.length) {
@@ -820,11 +853,13 @@ function cardHtml(t) {
   const exp = S.expanded===t._row;
   const dueLbl  = t.due       ? `<span class="due-lbl ${ov?'late':''}">${ov?'⚠ ':''}${fmtDue(t.due)}</span>` : '';
   const freqLbl = t.frequency ? `<span class="freq-lbl">${t.frequency}${sn?' ✓':''}</span>` : '';
+  const snoozeLbl = t.snooze_until && !isSnoozedUntil(t) ? '' : t.snooze_until ? `<span class="freq-lbl" style="color:#a855f7;background:#a855f720">💤 until ${fmtDue(t.snooze_until)}</span>` : '';
   const badge   = `<span class="badge" style="background:${p==='critical'?pc:pc+'22'};color:${p==='critical'?'#fff':pc}">${t.priority.toUpperCase()}</span>`;
   const notes   = t.notes     ? `<div class="card-notes" style="${done?'text-decoration:line-through;opacity:0.5':''}">${t.notes}</div>` : '';
   const acts    = exp ? `<div class="card-actions on">
     ${!done ? `<button class="act-btn" style="border-color:var(--green);color:var(--green)" onclick="markTaskDone(${t._row})">✓ Done</button>` : `<button class="act-btn" style="border-color:var(--muted);color:var(--muted)" onclick="unmarkTaskDone(${t._row})">↩ Undo Done</button>`}
     ${t.frequency&&!done?`<button class="act-btn" style="border-color:#10b981;color:#10b981" onclick="markDone(${t._row})">✓ Done Today</button>`:''}
+    <button class="act-btn" style="border-color:#a855f7;color:#a855f7" onclick="openSnooze(${t._row})">💤 Snooze</button>
     <button class="act-btn" style="border-color:var(--med);color:var(--med)" onclick="openEdit(${t._row})">✏ Edit</button>
     <button class="act-btn" style="border-color:${pc};color:${pc}" onclick="cyclePri(${t._row})">↕ Priority</button>
     <button class="act-btn" style="border-color:var(--crit);color:var(--crit)" onclick="delTask(${t._row})">🗑 Delete</button>
@@ -834,7 +869,7 @@ function cardHtml(t) {
     <div class="task-card ${ov&&!done?'overdue':''}" id="card-${t._row}" style="border-left-color:${done?'#333':bdr};opacity:${done?'0.5':'1'}" onclick="toggleExp(${t._row})">
       <div class="card-top">
         <span class="card-title" style="${done?'text-decoration:line-through;color:var(--muted)':''}">${t.title}</span>
-        <div class="card-meta">${dueLbl}${freqLbl}${badge}</div>
+        <div class="card-meta">${dueLbl}${freqLbl}${snoozeLbl}${badge}</div>
       </div>
       ${notes}${acts}
     </div>
@@ -989,6 +1024,49 @@ async function saveTask() {
 }
 
 // ════════════════════════════════════════════════
+// SNOOZE
+// ════════════════════════════════════════════════
+let snoozeTargetId = null;
+
+function openSnooze(rowId) {
+  const t = S.tasks.find(t=>t._row===rowId); if (!t) return;
+  snoozeTargetId = rowId;
+  document.getElementById('snooze-task-name').textContent = t.title;
+  document.getElementById('snooze-date').value = t.snooze_until || '';
+  openSheet('snooze-sheet');
+}
+
+function applySnoozePreset(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  document.getElementById('snooze-date').value = d.toISOString().split('T')[0];
+}
+
+function applySnoozeEndOfMonth() {
+  const d = new Date();
+  d.setMonth(d.getMonth()+1, 0); // last day of current month
+  document.getElementById('snooze-date').value = d.toISOString().split('T')[0];
+}
+
+async function applySnooze() {
+  const date = document.getElementById('snooze-date').value;
+  if (!date) { toast('pick a date first'); return; }
+  const t = S.tasks.find(t=>t._row===snoozeTargetId); if (!t) return;
+  t.snooze_until = date;
+  closeSheets(); toast('snoozed ✓');
+  try { await SHEETS.updateTask(t); } catch(e) { console.error(e); alert('Save failed.'); }
+  render();
+}
+
+async function clearSnooze() {
+  const t = S.tasks.find(t=>t._row===snoozeTargetId); if (!t) return;
+  t.snooze_until = '';
+  closeSheets(); toast('snooze cleared ✓');
+  try { await SHEETS.updateTask(t); } catch(e) { console.error(e); alert('Save failed.'); }
+  render();
+}
+
+// ════════════════════════════════════════════════
 // MANAGE CATEGORIES
 // ════════════════════════════════════════════════
 function renderColorPicker() {
@@ -1096,7 +1174,7 @@ function renderBriefingContent() {
     return false;
   }
 
-  const tasks = S.tasks.filter(t=>!suppressed(t)&&t.completed!=='Y');
+  const tasks = S.tasks.filter(t=>!suppressed(t)&&t.completed!=='Y'&&!isSnoozedUntil(t));
 
   // Today's focus — overdue or date-due, but NOT daily recurring tasks
   const DAILY_FREQS = new Set(['daily','weekdays']);
@@ -1233,6 +1311,7 @@ function openEditFromBriefing(rowId) {
   if (t.frequency) {
     btns.push(`<button class="sht-btn pri" style="background:#059669" onclick="markDone(${t._row});closeSheets()">✓ Done Today (snooze)</button>`);
   }
+  btns.push(`<button class="sht-btn sec" style="border-color:#a855f7;color:#a855f7" onclick="closeSheets();setTimeout(()=>openSnooze(${t._row}),120)">💤 Snooze Until...</button>`);
   btns.push(`<button class="sht-btn sec" style="border-color:var(--med);color:var(--med)" onclick="closeSheets();setTimeout(()=>openEdit(${t._row}),120)">✏ Edit</button>`);
   btns.push(`<button class="sht-btn sec" style="border-color:${pc};color:${pc}" onclick="cyclePri(${t._row})">↕ Cycle Priority (currently ${t.priority})</button>`);
   btns.push(`<button class="sht-btn sec" style="border-color:var(--crit);color:var(--crit)" onclick="if(confirm('Delete this task?')){delTask(${t._row});closeSheets()}">🗑 Delete</button>`);
