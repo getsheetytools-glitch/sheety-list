@@ -201,6 +201,21 @@
     .kofi-link  { display: inline-block; margin-top: 8px; background: #a855f7; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; text-decoration: none; letter-spacing: 0.04em; }
     .kofi-close { font-size: 26px; color: var(--muted); cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
 
+    /* Category settings */
+    .cat-settings { padding: 8px 24px 14px; border-bottom: 1px solid var(--border); display: none; }
+    .cat-settings.on { display: block; }
+    .cat-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .cat-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface); border-radius: 8px; cursor: pointer; font-size: 11px; color: var(--dim); border: 1px solid var(--border); transition: all 0.15s; }
+    .cat-toggle.on { background: var(--surf2); color: var(--text); border-color: #555; }
+    .cat-toggle-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; transition: background 0.15s; }
+    .cat-toggle.on .cat-toggle-dot { background: var(--green); }
+
+    /* Overdue sheet */
+    .overdue-task-row { display: flex; align-items: center; gap: 12px; padding: 13px 24px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .overdue-task-row:active { background: var(--surface); }
+    .overdue-task-title { flex: 1; font-size: 15px; color: var(--text); }
+    .overdue-task-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
     /* Briefing button */
     #briefing-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 18px 2px; padding: 13px; background: #0f1a14; border: 1px solid #10b98150; border-radius: 14px; color: var(--green); font-family: 'DM Mono', monospace; font-size: 14px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s; flex-shrink: 0; width: calc(100% - 36px); }
     #briefing-btn:active { background: #131f18; transform: scale(0.98); }
@@ -281,12 +296,22 @@
   </div>
 
   <div class="pills" id="pills"></div>
-  <div id="overdue-banner"></div>
+  <div id="overdue-banner" onclick="openOverdueSheet()" style="cursor:pointer"></div>
   <div class="list-wrap" id="task-list"></div>
   <nav class="bot-nav" id="bot-nav"></nav>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeSheets()"></div>
+
+<!-- Overdue sheet -->
+<div class="bsheet" id="overdue-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-ttl" style="color:#ff7070">⚠ Overdue Tasks</div>
+  <div id="overdue-list"></div>
+  <div class="sheet-btns">
+    <button class="sht-btn sec" onclick="closeSheets()">Done</button>
+  </div>
+</div>
 
 <!-- Task action sheet (from briefing) -->
 <div class="bsheet" id="action-sheet">
@@ -398,7 +423,7 @@ const SHEETS = (() => {
   const TASK_TAB  = 'Tasks';
   const CAT_TAB   = 'Categories';
   const TASK_HDRS = ['category','group','title','priority','due','notes','frequency','last_completed','completed'];
-  const CAT_HDRS  = ['name','color'];
+  const CAT_HDRS  = ['name','color','ignore_weekends','ignore_weekdays','no_daytime','no_nighttime','no_diversions','no_rotation'];
 
   let token=null, sheetId=null, taskTabId=0, catTabId=0, tclient=null;
 
@@ -482,8 +507,28 @@ const SHEETS = (() => {
     return (r.values||[]).slice(1).map((row,i)=>row2task(row,i+2)).filter(t=>t.title);
   }
   async function loadCats() {
-    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A:B`);
-    return (r.values||[]).slice(1).map((row,i)=>({ _row:i+2, name:(row[0]||'').trim(), color:(row[1]||'#888').trim() })).filter(c=>c.name);
+    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A:H`);
+    return (r.values||[]).slice(1).map((row,i)=>({
+      _row:i+2,
+      name:(row[0]||'').trim(),
+      color:(row[1]||'#888').trim(),
+      ignore_weekends:(row[2]||'').trim()==='Y',
+      ignore_weekdays:(row[3]||'').trim()==='Y',
+      no_daytime:(row[4]||'').trim()==='Y',
+      no_nighttime:(row[5]||'').trim()==='Y',
+      no_diversions:(row[6]||'').trim()==='Y',
+      no_rotation:(row[7]||'').trim()==='Y',
+    })).filter(c=>c.name);
+  }
+  function cat2row(c) {
+    return [c.name, c.color,
+      c.ignore_weekends?'Y':'', c.ignore_weekdays?'Y':'',
+      c.no_daytime?'Y':'', c.no_nighttime?'Y':'',
+      c.no_diversions?'Y':'', c.no_rotation?'Y':''];
+  }
+  async function updateCat(c) {
+    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A${c._row}:H${c._row}?valueInputOption=RAW`,
+      { method:'PUT', body:JSON.stringify({ values:[cat2row(c)] }) });
   }
   async function addTask(task) {
     const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:I:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
@@ -502,10 +547,10 @@ const SHEETS = (() => {
     });
   }
   async function addCat(name,color) {
-    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A:B:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-      { method:'POST', body:JSON.stringify({ values:[[name,color]] }) });
+    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A:H:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+      { method:'POST', body:JSON.stringify({ values:[[name,color,'','','','','','']] }) });
   }
-  return { init, signIn, setup, loadTasks, loadCats, addTask, updateTask, addCat,
+  return { init, signIn, setup, loadTasks, loadCats, addTask, updateTask, addCat, updateCat,
     deleteTask: t=>deleteRow(taskTabId,t._row), deleteCat: c=>deleteRow(catTabId,c._row) };
 })();
 
@@ -517,7 +562,7 @@ const PRI_COLOR = { critical:'#ff3b30', high:'#f97316', med:'#3b82f6', low:'#6b7
 const PALETTE   = ['#8b5cf6','#0ea5e9','#f43f5e','#10b981','#f97316','#eab308','#ec4899','#14b8a6','#6366f1','#84cc16'];
 const SNOOZE    = { daily:1, weekdays:1, weekly:7, biweekly:14, monthly:30, bimonthly:60, quarterly:90, semiannual:180, annual:365, 'annual / 5yr':365 };
 
-let S = { tasks:[], cats:[], cat:'', group:'All', expanded:null, editing:null, newCatColor:PALETTE[0], showCompleted:false };
+let S = { tasks:[], cats:[], cat:'', group:'All', expanded:null, editing:null, newCatColor:PALETTE[0], showCompleted:false, showOverdueTab:false };
 
 // ════════════════════════════════════════════════
 // INSTALL BANNER
@@ -649,13 +694,22 @@ function toast(msg,ms=1600) {
 function render() { renderNav(); renderPills(); renderList(); renderBanner(); }
 
 function renderNav() {
-  document.getElementById('bot-nav').innerHTML = S.cats.map(c => {
-    const on  = S.cat===c.name;
+  const tabs = [...S.cats];
+  const overdueCount = S.tasks.filter(t=>isOverdue(t)&&t.completed!=='Y').length;
+  let html = tabs.map(c => {
+    const on = S.cat===c.name;
     const lbl = c.name.length>9 ? c.name.substring(0,8)+'…' : c.name;
     return `<button class="nav-tab ${on?'on':''}" style="${on?`color:${c.color}`:''}" onclick="setCat('${c.name.replace(/'/g,"\\'")}')">
       <div class="nav-dot" style="${on?`background:${c.color}`:''}"></div>${lbl.toUpperCase()}
     </button>`;
   }).join('');
+  if (overdueCount > 0) {
+    const on = S.cat==='__overdue__';
+    html += `<button class="nav-tab ${on?'on':''}" style="${on?'color:#ff3b30':''}" onclick="setCat('__overdue__')">
+      <div class="nav-dot" style="${on?'background:#ff3b30':''}"></div>⚠ OVERDUE
+    </button>`;
+  }
+  document.getElementById('bot-nav').innerHTML = html;
 }
 
 function renderPills() {
@@ -670,14 +724,63 @@ function renderPills() {
 }
 
 function renderBanner() {
-  const n=S.tasks.filter(t=>isOverdue(t)).length;
-  const b=document.getElementById('overdue-banner');
-  if (n) { b.textContent=`⚠ ${n} overdue task${n>1?'s':''} across your list`; b.classList.add('on'); }
-  else   { b.classList.remove('on'); }
+  const overdue = S.tasks.filter(t=>isOverdue(t)&&t.completed!=='Y');
+  const n = overdue.length;
+  const b = document.getElementById('overdue-banner');
+  if (n) {
+    b.textContent = `⚠ ${n} overdue task${n>1?'s':''} — tap to review`;
+    b.classList.add('on');
+    // Add temp overdue tab if not already there
+    if (!S.showOverdueTab) { S.showOverdueTab = true; renderNav(); }
+  } else {
+    b.classList.remove('on');
+    if (S.showOverdueTab) { S.showOverdueTab = false; if(S.cat==='__overdue__') S.cat=S.cats[0]?.name||''; renderNav(); }
+  }
+}
+
+function openOverdueSheet() {
+  const overdue = S.tasks.filter(t=>isOverdue(t)&&t.completed!=='Y')
+    .sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
+  const pc = p => PRI_COLOR[p.toLowerCase()]||'#6b7280';
+  document.getElementById('overdue-list').innerHTML = overdue.map(t => {
+    const p = t.priority.toLowerCase();
+    const col = pc(t.priority);
+    return `<div class="overdue-task-row" onclick="openEditFromBriefing(${t._row})">
+      <div style="width:4px;height:40px;background:${col};border-radius:2px;flex-shrink:0"></div>
+      <div class="overdue-task-title">${t.title}</div>
+      <div class="overdue-task-meta">
+        <span class="due-lbl late" style="font-size:12px">${fmtDue(t.due)}</span>
+        <span class="badge" style="background:${p==='critical'?col:col+'22'};color:${p==='critical'?'#fff':col};font-size:10px">${t.priority.toUpperCase()}</span>
+      </div>
+    </div>`;
+  }).join('') || `<p style="padding:20px 24px;color:var(--muted);font-size:14px;">No overdue tasks.</p>`;
+  openSheet('overdue-sheet');
 }
 
 function renderList() {
   const q=(document.getElementById('search-input')?.value||'').toLowerCase();
+
+  // Virtual overdue category
+  if (S.cat === '__overdue__') {
+    const overdue = S.tasks.filter(t=>isOverdue(t)&&t.completed!=='Y')
+      .sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
+    if (!overdue.length) {
+      document.getElementById('task-list').innerHTML=`<div class="empty">No overdue tasks 🎉</div>`;
+      return;
+    }
+    const col = '#ff3b30';
+    document.getElementById('task-list').innerHTML = `<div class="group-sec">
+      <div class="group-hdr">
+        <span class="group-lbl" style="color:${col}">OVERDUE</span>
+        <div class="group-line" style="color:${col}"></div>
+        <span class="group-cnt">${overdue.length}</span>
+      </div>
+      <div class="task-list">${overdue.map(t=>cardHtml(t)).join('')}</div>
+    </div>`;
+    overdue.forEach(t=>attachSwipe(t._row));
+    return;
+  }
+
   const filtered=S.tasks.filter(t=>
     t.category===S.cat &&
     (S.group==='All'||t.group===S.group) &&
@@ -895,9 +998,45 @@ function renderColorPicker() {
 }
 function openManageCats() { renderCatsList(); renderColorPicker(); document.getElementById('new-cat-name').value=''; openSheet('cats-sheet'); }
 function renderCatsList() {
-  document.getElementById('cats-list').innerHTML=S.cats.map(c=>
-    `<div class="cat-row"><div class="cat-swatch" style="background:${c.color}"></div><span class="cat-name">${c.name}</span><span class="cat-del" onclick="deleteCat(${c._row})">×</span></div>`
-  ).join('');
+  const SETTING_DEFS = [
+    { key:'ignore_weekends', label:'Ignore weekends' },
+    { key:'ignore_weekdays', label:'Ignore weekdays' },
+    { key:'no_daytime',      label:'Skip daytime briefing' },
+    { key:'no_nighttime',    label:'Skip nighttime briefing' },
+    { key:'no_diversions',   label:'Never in diversions' },
+    { key:'no_rotation',     label:'Never in rotation' },
+  ];
+  document.getElementById('cats-list').innerHTML = S.cats.map(c => {
+    const toggles = SETTING_DEFS.map(d =>
+      `<div class="cat-toggle ${c[d.key]?'on':''}" onclick="toggleCatSetting(${c._row},'${d.key}')">
+        <div class="cat-toggle-dot"></div>${d.label}
+      </div>`
+    ).join('');
+    return `<div>
+      <div class="cat-row" onclick="toggleCatSettings(${c._row})">
+        <div class="cat-swatch" style="background:${c.color}"></div>
+        <span class="cat-name">${c.name}</span>
+        <span style="font-size:12px;color:var(--muted);margin-right:4px">⚙</span>
+        <span class="cat-del" onclick="event.stopPropagation();deleteCat(${c._row})">×</span>
+      </div>
+      <div class="cat-settings" id="cat-settings-${c._row}">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em;margin-bottom:6px;">SURFACING RULES</div>
+        <div class="cat-settings-grid">${toggles}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCatSettings(rowNum) {
+  const el = document.getElementById(`cat-settings-${rowNum}`);
+  if (el) el.classList.toggle('on');
+}
+
+async function toggleCatSetting(rowNum, key) {
+  const c = S.cats.find(c=>c._row===rowNum); if(!c) return;
+  c[key] = !c[key];
+  try { await SHEETS.updateCat(c); renderCatsList(); toast('saved ✓'); }
+  catch(e) { console.error(e); alert('Save failed.'); }
 }
 async function addCategory() {
   const name=document.getElementById('new-cat-name').value.trim();
@@ -939,93 +1078,107 @@ function renderBriefingContent() {
   const PRI_WEIGHT  = { critical:8, high:5, med:2, low:1 };
   const SNOOZE_DAYS = { daily:1, weekdays:1, weekly:7, biweekly:14, monthly:30, bimonthly:60, quarterly:90, semiannual:180, annual:365, 'annual / 5yr':365 };
   const isWeekend   = [0,6].includes(new Date().getDay());
-  const WORK_CATS   = ['work'];
+  const isNighttime = new Date().getHours() >= 17;
 
-  function suppressed(t) { return isWeekend && WORK_CATS.includes(t.category.toLowerCase()); }
-  function snoozed(t) {
-    const f=t.frequency.toLowerCase();
-    if(!f||!t.last_completed) return false;
-    const days=Math.floor((new Date(todayStr())-new Date(t.last_completed))/86400000);
-    return days<(SNOOZE_DAYS[f]||1);
+  function catSettings(task) {
+    return S.cats.find(c=>c.name.toLowerCase()===task.category.toLowerCase()) || {};
   }
 
-  const tasks = S.tasks.filter(t=>!suppressed(t));
+  const WORK_CATS = ['work'];
+
+  function suppressed(t) {
+    const cs = catSettings(t);
+    if (isWeekend && cs.ignore_weekends) return true;
+    if (!isWeekend && cs.ignore_weekdays) return true;
+    if (isNighttime && cs.no_nighttime) return true;
+    if (!isNighttime && cs.no_daytime) return true;
+    if (WORK_CATS.includes(t.category.toLowerCase()) && isWeekend) return true;
+    return false;
+  }
+
+  const tasks = S.tasks.filter(t=>!suppressed(t)&&t.completed!=='Y');
 
   // Today's focus — overdue or date-due, but NOT daily recurring tasks
   const DAILY_FREQS = new Set(['daily','weekdays']);
   let focus = tasks.filter(t=>
     (isOverdue(t)||isDue(t.due)) &&
-    !DAILY_FREQS.has(t.frequency.toLowerCase()) &&
-    t.completed !== 'Y'
+    !DAILY_FREQS.has(t.frequency.toLowerCase())
   ).sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
 
   // Nothing due today — build a shuffleable fallback pool
   if (!focus.length) {
-    const nonRecurring = tasks.filter(t => !t.frequency && t.completed !== 'Y');
-
-    // Pool A: upcoming due dates (weighted by proximity)
-    const upcoming = nonRecurring
-      .filter(t => t.due && !isDue(t.due))
-      .sort((a,b) => new Date(a.due) - new Date(b.due))
-      .slice(0, 5);
-
-    // Pool B: high/critical with no completion history
-    const highPriNoRecent = nonRecurring
-      .filter(t => ['critical','high'].includes(t.priority.toLowerCase()) && !t.last_completed)
-      .sort((a,b) => PRI_ORDER[a.priority.toLowerCase()] - PRI_ORDER[b.priority.toLowerCase()])
-      .slice(0, 5);
-
-    // Pool C: top priority overall
-    const topOverall = tasks
-      .filter(t => t.completed !== 'Y' && !DAILY_FREQS.has(t.frequency.toLowerCase()))
-      .sort((a,b) => PRI_ORDER[a.priority.toLowerCase()] - PRI_ORDER[b.priority.toLowerCase()])
-      .slice(0, 5);
-
-    // Merge pools, deduplicate, shuffle, pick 1-2
-    const pool = [...new Map([...upcoming, ...highPriNoRecent, ...topOverall].map(t=>[t._row,t])).values()];
-    pool.sort(() => Math.random() - 0.5);
+    const nonRecurring = tasks.filter(t => !t.frequency);
+    const upcoming = nonRecurring.filter(t=>t.due&&!isDue(t.due)).sort((a,b)=>new Date(a.due)-new Date(b.due)).slice(0,5);
+    const highPriNoRecent = nonRecurring.filter(t=>['critical','high'].includes(t.priority.toLowerCase())&&!t.last_completed).sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]).slice(0,5);
+    const topOverall = tasks.filter(t=>!DAILY_FREQS.has(t.frequency.toLowerCase())).sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]).slice(0,5);
+    const pool = [...new Map([...upcoming,...highPriNoRecent,...topOverall].map(t=>[t._row,t])).values()];
+    pool.sort(()=>Math.random()-0.5);
     focus = pool.slice(0, Math.min(2, pool.length));
   }
 
-  // Rotation — active recurring tasks not snoozed
-  const FREQ_DAILY     = new Set(['daily','weekdays']);
-  const FREQ_WEEKLY    = new Set(['weekly','biweekly']);
-  const FREQ_MONTHLY   = new Set(['monthly','bimonthly']);
-  const FREQ_INFREQ    = new Set(['quarterly','semiannual','annual','annual / 5yr']);
+  const focusIds = new Set(focus.map(t=>t._row));
 
-  const recurring = tasks.filter(t=>t.frequency&&!snoozed(t));
-  const dailies   = recurring.filter(t=>FREQ_DAILY.has(t.frequency.toLowerCase()));
-  const weeklies  = weightedSample(recurring.filter(t=>FREQ_WEEKLY.has(t.frequency.toLowerCase())), 3);
-  const monthlies = weightedSample(recurring.filter(t=>FREQ_MONTHLY.has(t.frequency.toLowerCase())), 2);
-  const infreq    = weightedSample(recurring.filter(t=>FREQ_INFREQ.has(t.frequency.toLowerCase())), 1);
-  const rotation  = [...dailies, ...weeklies, ...monthlies, ...infreq];
-
-  // Diversions — non-recurring, non-due, mixed categories
-  const radar = tasks.filter(t=>!t.frequency&&!isDue(t.due)&&!isOverdue(t));
-  const diversions = pickDiversions(radar, 3, 5);
+  // Smart score: priority + recency + frequency urgency + randomness
+  function smartScore(t) {
+    const priScore = (4-(PRI_ORDER[t.priority.toLowerCase()]||3))*3;
+    const recencyScore = t.last_completed
+      ? Math.min(Math.floor((new Date(todayStr())-new Date(t.last_completed))/86400000)/30, 2)
+      : 2;
+    const freqScore = (() => {
+      const f = t.frequency.toLowerCase();
+      if (!f) return 1;
+      const days = SNOOZE_DAYS[f]||7;
+      return Math.max(0, 1-(days/365))*2;
+    })();
+    return priScore + recencyScore + freqScore + Math.random()*1.5;
+  }
 
   function weightedSample(arr, n) {
     if (!arr.length) return [];
-    const scored = arr.map(t=>({ t, s: PRI_WEIGHT[t.priority.toLowerCase()]||1 + Math.random()*2 }))
-      .sort((a,b)=>b.s-a.s);
-    const pool = scored.slice(0, Math.max(n*2, arr.length)).map(x=>x.t);
+    const scored = arr.map(t=>({ t, s:smartScore(t) })).sort((a,b)=>b.s-a.s);
+    const pool = scored.slice(0,Math.max(n*2,arr.length)).map(x=>x.t);
     pool.sort(()=>Math.random()-0.5);
     return pool.slice(0,n);
   }
 
   function pickDiversions(arr, min, max) {
+    // Exclude anything already in focus, and respect no_diversions category setting
+    const eligible = arr.filter(t=>!focusIds.has(t._row)&&!catSettings(t).no_diversions);
     const buckets={};
-    arr.forEach(t=>{ const k=t.category.toLowerCase(); (buckets[k]=buckets[k]||[]).push(t); });
-    Object.values(buckets).forEach(b=>b.sort((a,b2)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b2.priority.toLowerCase()]));
+    eligible.forEach(t=>{ const k=t.category.toLowerCase(); (buckets[k]=buckets[k]||[]).push(t); });
+    Object.values(buckets).forEach(b=>b.sort((a,b2)=>b2.s-a.s||Math.random()-0.5));
     const cats=Object.keys(buckets).sort(()=>Math.random()-0.5);
     const result=[];
     cats.forEach(c=>{ if(result.length<max&&buckets[c].length) result.push(buckets[c][0]); });
-    if(result.length<min) {
+    if (result.length<min) {
       cats.forEach(c=>{ buckets[c].slice(1).forEach(t=>{ if(result.length<max&&!result.includes(t)) result.push(t); }); });
     }
     result.sort(()=>Math.random()-0.5);
     return result.slice(0,max);
   }
+
+  // Rotation — active recurring, respect no_rotation setting, exclude focus ids
+  const FREQ_WEEKLY  = new Set(['weekly','biweekly']);
+  const FREQ_MONTHLY = new Set(['monthly','bimonthly']);
+  const FREQ_INFREQ  = new Set(['quarterly','semiannual','annual','annual / 5yr']);
+
+  const snoozedFn = t => {
+    const f=t.frequency.toLowerCase();
+    if(!f||!t.last_completed) return false;
+    const days=Math.floor((new Date(todayStr())-new Date(t.last_completed))/86400000);
+    return days<(SNOOZE_DAYS[f]||1);
+  };
+
+  const recurring = tasks.filter(t=>t.frequency&&!snoozedFn(t)&&!focusIds.has(t._row)&&!catSettings(t).no_rotation);
+  const dailies   = recurring.filter(t=>DAILY_FREQS.has(t.frequency.toLowerCase()));
+  const weeklies  = weightedSample(recurring.filter(t=>FREQ_WEEKLY.has(t.frequency.toLowerCase())), 3);
+  const monthlies = weightedSample(recurring.filter(t=>FREQ_MONTHLY.has(t.frequency.toLowerCase())), 2);
+  const infreq    = weightedSample(recurring.filter(t=>FREQ_INFREQ.has(t.frequency.toLowerCase())), 1);
+  const rotation  = [...dailies,...weeklies,...monthlies,...infreq];
+
+  // Diversions — non-recurring, not due, not in focus
+  const radar = tasks.filter(t=>!t.frequency&&!isDue(t.due)&&!isOverdue(t));
+  const diversions = pickDiversions(radar, 3, 5);
 
   function briefCard(t, showFreq=false, showCat=false) {
     const p  = t.priority.toLowerCase();
