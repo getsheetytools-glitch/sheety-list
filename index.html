@@ -11,6 +11,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="My Sheety List">
   <title>My Sheety List — Sheety.tools</title>
+  <script>
+    // Force reload if cached version is stale (iOS PWA fix)
+    const APP_VERSION = '2026-03-14-v1';
+    if (localStorage.getItem('app-version') !== APP_VERSION) {
+      localStorage.setItem('app-version', APP_VERSION);
+      if (localStorage.getItem('app-version-loaded')) {
+        window.location.reload(true);
+      }
+    }
+    localStorage.setItem('app-version-loaded', '1');
+  </script>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -948,27 +959,32 @@ function renderBriefingContent() {
     t.completed !== 'Y'
   ).sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
 
-  // Nothing due today — find the best fallback
+  // Nothing due today — build a shuffleable fallback pool
   if (!focus.length) {
     const nonRecurring = tasks.filter(t => !t.frequency && t.completed !== 'Y');
 
-    // 1. Soonest upcoming due date
+    // Pool A: upcoming due dates (weighted by proximity)
     const upcoming = nonRecurring
       .filter(t => t.due && !isDue(t.due))
-      .sort((a,b) => new Date(a.due) - new Date(b.due));
+      .sort((a,b) => new Date(a.due) - new Date(b.due))
+      .slice(0, 5);
 
-    // 2. High priority with no recent completion
+    // Pool B: high/critical with no completion history
     const highPriNoRecent = nonRecurring
       .filter(t => ['critical','high'].includes(t.priority.toLowerCase()) && !t.last_completed)
-      .sort((a,b) => PRI_ORDER[a.priority.toLowerCase()] - PRI_ORDER[b.priority.toLowerCase()]);
+      .sort((a,b) => PRI_ORDER[a.priority.toLowerCase()] - PRI_ORDER[b.priority.toLowerCase()])
+      .slice(0, 5);
 
-    // 3. Top priority overall
+    // Pool C: top priority overall
     const topOverall = tasks
       .filter(t => t.completed !== 'Y' && !DAILY_FREQS.has(t.frequency.toLowerCase()))
-      .sort((a,b) => PRI_ORDER[a.priority.toLowerCase()] - PRI_ORDER[b.priority.toLowerCase()]);
+      .sort((a,b) => PRI_ORDER[a.priority.toLowerCase()] - PRI_ORDER[b.priority.toLowerCase()])
+      .slice(0, 5);
 
-    const fallback = upcoming[0] || highPriNoRecent[0] || topOverall[0];
-    if (fallback) focus = [fallback];
+    // Merge pools, deduplicate, shuffle, pick 1-2
+    const pool = [...new Map([...upcoming, ...highPriNoRecent, ...topOverall].map(t=>[t._row,t])).values()];
+    pool.sort(() => Math.random() - 0.5);
+    focus = pool.slice(0, Math.min(2, pool.length));
   }
 
   // Rotation — active recurring tasks not snoozed
