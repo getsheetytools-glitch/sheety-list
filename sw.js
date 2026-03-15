@@ -1,9 +1,9 @@
-const CACHE = 'mylist-v3';
+const CACHE = 'mylist-v4';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {})));
-  self.skipWaiting();
+  // Don't skipWaiting — wait for user to confirm update
 });
 
 self.addEventListener('activate', e => {
@@ -26,4 +26,9 @@ self.addEventListener('fetch', e => {
       return resp;
     }))
   );
+});
+
+// Tell the app when an update is waiting
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });

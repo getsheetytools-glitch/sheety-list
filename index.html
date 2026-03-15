@@ -187,6 +187,13 @@
     .kofi-link  { display: inline-block; margin-top: 8px; background: #a855f7; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; text-decoration: none; letter-spacing: 0.04em; }
     .kofi-close { font-size: 26px; color: var(--muted); cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
 
+    /* Update banner */
+    #update-banner { display: none; align-items: center; gap: 12px; margin: 6px 18px; padding: 14px 16px; background: #0f1520; border: 1px solid #3b82f650; border-radius: 14px; flex-shrink: 0; }
+    #update-banner.on { display: flex; }
+    .update-body { flex: 1; font-size: 13px; color: var(--dim); line-height: 1.6; }
+    .update-body strong { color: var(--text); }
+    .update-btn { background: var(--med); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+
     /* Briefing button */
     #briefing-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 18px 2px; padding: 13px; background: #0f1a14; border: 1px solid #10b98150; border-radius: 14px; color: var(--green); font-family: 'DM Mono', monospace; font-size: 14px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s; flex-shrink: 0; width: calc(100% - 36px); }
     #briefing-btn:active { background: #131f18; transform: scale(0.98); }
@@ -245,6 +252,11 @@
 
   <div id="search-bar">
     <input class="search-input" id="search-input" placeholder="Search tasks..." oninput="render()">
+  </div>
+
+  <div id="update-banner">
+    <div class="update-body"><strong>Update available</strong> — tap to get the latest version.</div>
+    <button class="update-btn" onclick="applyUpdate()">Update</button>
   </div>
 
   <div id="install-banner">
@@ -954,7 +966,41 @@ function openSheet(id) { document.getElementById('overlay').classList.add('on');
 function closeSheets() { document.getElementById('overlay').classList.remove('on'); document.querySelectorAll('.bsheet').forEach(s=>s.classList.remove('on')); }
 </script>
 <script>
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(console.error);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Check for updates on load
+      reg.update();
+
+      // New service worker waiting — show update banner
+      const showBanner = () => {
+        if (reg.waiting) {
+          document.getElementById('update-banner').classList.add('on');
+        }
+      };
+
+      if (reg.waiting) showBanner();
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showBanner();
+          }
+        });
+      });
+    }).catch(console.error);
+
+    // After skipWaiting, reload to use new version
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) { refreshing = true; window.location.reload(); }
+    });
+  }
+
+  function applyUpdate() {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg?.waiting) reg.waiting.postMessage('SKIP_WAITING');
+    });
+  }
 </script>
 </body>
 </html>
