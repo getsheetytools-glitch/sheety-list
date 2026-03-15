@@ -9,8 +9,8 @@ A personal task manager PWA that lives at `list.sheety.tools`. Tasks are stored 
 | `index.html` | The entire app |
 | `manifest.json` | PWA metadata (icons, name, theme) |
 | `sw.js` | Service worker for offline support |
-| `icon-192.png` | App icon (you need to add this) |
-| `icon-512.png` | App icon large (you need to add this) |
+| `icon-192.png` | App icon |
+| `icon-512.png` | App icon large |
 
 ## Setup
 
