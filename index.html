@@ -15,21 +15,17 @@
   <script src="https://accounts.google.com/gsi/client" async></script>
   <style>
     :root {
-      --bg:       #0f0f13;
-      --surface:  #141420;
-      --surface2: #1a1a28;
-      --border:   #1e1e2e;
-      --text:     #d8d8e8;
-      --dim:      #666;
-      --muted:    #444;
-      --personal: #8b5cf6;
-      --work:     #0ea5e9;
-      --dame:     #f43f5e;
-      --sheety:   #10b981;
-      --critical: #ff3b30;
-      --high:     #f97316;
-      --med:      #3b82f6;
-      --low:      #6b7280;
+      --bg:      #0f0f13;
+      --surface: #141420;
+      --surf2:   #1a1a28;
+      --border:  #1e1e2e;
+      --text:    #d8d8e8;
+      --dim:     #666;
+      --muted:   #444;
+      --crit:    #ff3b30;
+      --high:    #f97316;
+      --med:     #3b82f6;
+      --low:     #6b7280;
       --sb: env(safe-area-inset-bottom, 0px);
       --st: env(safe-area-inset-top, 0px);
     }
@@ -37,175 +33,148 @@
     html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; }
 
     /* ── Sign-in ── */
-    #signin {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; height: 100%; padding: 48px 32px; gap: 28px;
-    }
+    #signin { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 48px 32px; gap: 28px; }
     .signin-logo h1 { font-family: 'Lora', serif; font-size: 34px; font-weight: 600; text-align: center; letter-spacing: -0.02em; }
-    .signin-logo p { font-size: 10px; color: var(--muted); letter-spacing: 0.12em; text-align: center; margin-top: 4px; }
-    .signin-desc { font-size: 12px; color: var(--dim); text-align: center; line-height: 1.7; max-width: 280px; }
-    .google-btn {
-      display: flex; align-items: center; gap: 12px;
-      background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); padding: 14px 28px; border-radius: 12px;
-      font-family: 'DM Mono', monospace; font-size: 13px;
-      cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em;
-    }
-    .google-btn:hover { border-color: #333; background: #1e1e30; }
+    .signin-logo p  { font-size: 10px; color: var(--muted); letter-spacing: 0.12em; text-align: center; margin-top: 4px; }
+    .signin-desc    { font-size: 12px; color: var(--dim); text-align: center; line-height: 1.7; max-width: 280px; }
+    .google-btn     { display: flex; align-items: center; gap: 12px; background: var(--surf2); border: 1px solid var(--border); color: var(--text); padding: 14px 28px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em; }
     .google-btn:active { transform: scale(0.97); }
     .g-icon { width: 18px; height: 18px; flex-shrink: 0; }
-    .signin-footer { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.6; }
+    .signin-footer  { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.6; }
 
     /* ── Loading ── */
     #loading { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 14px; }
-    .spinner { width: 26px; height: 26px; border: 2px solid var(--border); border-top-color: var(--sheety); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .spinner { width: 26px; height: 26px; border: 2px solid var(--border); border-top-color: #10b981; border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-txt { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
 
-    /* ── App shell ── */
+    /* ── App ── */
     #app { display: none; flex-direction: column; height: 100%; padding-top: var(--st); }
 
     /* Header */
-    .hdr { display: flex; align-items: center; gap: 10px; padding: 14px 18px 0; flex-shrink: 0; }
+    .hdr { display: flex; align-items: center; gap: 8px; padding: 14px 16px 0; flex-shrink: 0; }
     .hdr-title { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; flex: 1; letter-spacing: -0.01em; }
-    .icon-btn {
-      width: 36px; height: 36px; border-radius: 10px; background: var(--surface);
-      border: 1px solid var(--border); color: var(--dim); display: flex;
-      align-items: center; justify-content: center; cursor: pointer;
-      font-size: 15px; transition: all 0.15s; flex-shrink: 0; padding: 0;
-    }
+    .icon-btn  { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--dim); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: all 0.15s; flex-shrink: 0; padding: 0; }
     .icon-btn:active { transform: scale(0.92); }
-    .add-btn { background: var(--sheety); border-color: var(--sheety); color: #fff; font-size: 20px; }
+    .add-btn   { background: #10b981; border-color: #10b981; color: #fff; font-size: 20px; }
 
     /* Search */
-    #search-bar { display: none; padding: 8px 18px; flex-shrink: 0; }
+    #search-bar { display: none; padding: 8px 16px; flex-shrink: 0; }
     #search-bar.on { display: block; }
-    .search-input {
-      width: 100%; background: var(--surface); border: 1px solid var(--border);
-      color: var(--text); padding: 9px 14px; border-radius: 10px;
-      font-family: 'DM Mono', monospace; font-size: 12px; outline: none;
-    }
+    .search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 9px 14px; border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 12px; outline: none; }
+    .search-input:focus { border-color: #10b981; }
     .search-input::placeholder { color: var(--muted); }
-    .search-input:focus { border-color: var(--sheety); }
 
     /* Pills */
-    .pills { display: flex; gap: 5px; padding: 8px 18px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+    .pills { display: flex; gap: 5px; padding: 8px 16px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
     .pills::-webkit-scrollbar { display: none; }
-    .pill {
-      background: transparent; border: 1px solid #252535; color: var(--muted);
-      padding: 4px 13px; border-radius: 20px; font-family: 'DM Mono', monospace;
-      font-size: 10px; letter-spacing: 0.04em; white-space: nowrap;
-      cursor: pointer; flex-shrink: 0; transition: all 0.15s;
-    }
+    .pill { background: transparent; border: 1px solid #252535; color: var(--muted); padding: 4px 13px; border-radius: 20px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em; white-space: nowrap; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
     .pill.on { background: var(--surface); }
 
     /* Overdue banner */
-    #overdue-banner { display: none; margin: 4px 18px; padding: 8px 12px; background: #1c0a0a; border: 1px solid #ff3b3060; border-radius: 8px; font-size: 11px; color: #ff6b6b; }
+    #overdue-banner { display: none; margin: 4px 16px; padding: 8px 12px; background: #1c0a0a; border: 1px solid #ff3b3060; border-radius: 8px; font-size: 11px; color: #ff6b6b; }
     #overdue-banner.on { display: block; }
 
-    /* Task list */
-    .list-wrap { flex: 1; overflow-y: auto; padding: 6px 14px 12px; -webkit-overflow-scrolling: touch; }
-
-    .group-sec { margin-bottom: 22px; }
-    .group-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; padding: 0 2px; }
-    .group-lbl { font-size: 9px; letter-spacing: 0.12em; font-weight: 500; text-transform: uppercase; }
+    /* List */
+    .list-wrap { flex: 1; overflow-y: auto; padding: 6px 12px 12px; -webkit-overflow-scrolling: touch; }
+    .group-sec  { margin-bottom: 22px; }
+    .group-hdr  { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; padding: 0 2px; }
+    .group-lbl  { font-size: 9px; letter-spacing: 0.12em; font-weight: 500; text-transform: uppercase; }
     .group-line { flex: 1; height: 1px; background: currentColor; opacity: 0.12; }
-    .group-cnt { font-size: 9px; color: var(--muted); }
+    .group-cnt  { font-size: 9px; color: var(--muted); }
 
     /* Card */
-    .card-wrap { position: relative; margin-bottom: 4px; border-radius: 8px; overflow: hidden; }
-    .delete-bg { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: var(--critical); display: flex; align-items: center; justify-content: center; font-size: 18px; border-radius: 8px; }
-    .task-card {
-      position: relative; background: var(--surface); border-left: 3px solid transparent;
-      border-radius: 8px; padding: 11px 13px; cursor: pointer;
-      transition: transform 0.2s ease; touch-action: pan-y; user-select: none;
-    }
+    .card-wrap  { position: relative; margin-bottom: 4px; border-radius: 8px; overflow: hidden; }
+    .delete-bg  { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: var(--crit); display: flex; align-items: center; justify-content: center; font-size: 18px; border-radius: 8px; }
+    .task-card  { position: relative; background: var(--surface); border-left: 3px solid transparent; border-radius: 8px; padding: 11px 13px; cursor: pointer; transition: transform 0.2s ease; touch-action: pan-y; user-select: none; }
     .task-card.overdue { background: #190f0f; }
     .task-card.swiping { transition: none; }
-    .task-card:active { background: var(--surface2); }
-
-    .card-top { display: flex; align-items: flex-start; gap: 8px; }
+    .card-top   { display: flex; align-items: flex-start; gap: 8px; }
     .card-title { flex: 1; font-size: 13px; color: var(--text); line-height: 1.4; }
-    .card-meta { display: flex; gap: 4px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
-
-    .badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-family: 'DM Mono', monospace; letter-spacing: 0.05em; font-weight: 500; white-space: nowrap; }
-    .due-lbl { font-size: 10px; color: var(--muted); white-space: nowrap; }
-    .due-lbl.late { color: var(--critical); }
-    .freq-lbl { font-size: 9px; color: #3a3a4a; background: #ffffff06; padding: 2px 5px; border-radius: 3px; white-space: nowrap; }
+    .card-meta  { display: flex; gap: 4px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
+    .badge      { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-family: 'DM Mono', monospace; letter-spacing: 0.05em; font-weight: 500; white-space: nowrap; }
+    .due-lbl    { font-size: 10px; color: var(--muted); white-space: nowrap; }
+    .due-lbl.late { color: var(--crit); }
+    .freq-lbl   { font-size: 9px; color: #3a3a4a; background: #ffffff06; padding: 2px 5px; border-radius: 3px; white-space: nowrap; }
     .card-notes { font-size: 11px; color: var(--dim); font-style: italic; margin-top: 5px; line-height: 1.4; }
 
     /* Card actions */
     .card-actions { display: none; padding-top: 9px; margin-top: 8px; border-top: 1px solid var(--border); gap: 5px; flex-wrap: wrap; }
     .card-actions.on { display: flex; }
-    .act-btn {
-      background: var(--surface2); border: 1px solid var(--border); color: var(--dim);
-      padding: 6px 11px; border-radius: 6px; font-family: 'DM Mono', monospace;
-      font-size: 10px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em;
-    }
+    .act-btn    { background: var(--surf2); border: 1px solid var(--border); color: var(--dim); padding: 6px 11px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.15s; }
     .act-btn:active { transform: scale(0.94); }
 
     /* Bottom nav */
-    .bot-nav { display: flex; border-top: 1px solid var(--border); flex-shrink: 0; padding-bottom: var(--sb); background: var(--bg); }
-    .nav-tab {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      padding: 9px 4px; cursor: pointer; border: none; background: transparent;
-      color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px;
-      letter-spacing: 0.05em; gap: 4px; transition: color 0.15s;
-    }
+    .bot-nav    { display: flex; border-top: 1px solid var(--border); flex-shrink: 0; padding-bottom: var(--sb); background: var(--bg); overflow-x: auto; scrollbar-width: none; }
+    .bot-nav::-webkit-scrollbar { display: none; }
+    .nav-tab    { flex: 0 0 auto; min-width: 64px; display: flex; flex-direction: column; align-items: center; padding: 9px 8px; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.05em; gap: 4px; transition: color 0.15s; white-space: nowrap; }
     .nav-tab.on { color: var(--text); }
-    .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0; transition: opacity 0.15s; }
+    .nav-dot    { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0; transition: opacity 0.15s; }
     .nav-tab.on .nav-dot { opacity: 1; }
 
     /* Bottom sheet */
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .overlay    { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
     .overlay.on { opacity: 1; pointer-events: all; }
-    .bsheet {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: #16162a; border-radius: 20px 20px 0 0;
-      border-top: 1px solid var(--border); z-index: 101;
-      transform: translateY(100%);
-      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
-      padding-bottom: calc(var(--sb) + 8px);
-      max-height: 88vh; overflow-y: auto;
-    }
-    .bsheet.on { transform: translateY(0); }
+    .bsheet     { position: fixed; bottom: 0; left: 0; right: 0; background: #16162a; border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); z-index: 101; transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1); padding-bottom: calc(var(--sb) + 8px); max-height: 90vh; overflow-y: auto; }
+    .bsheet.on  { transform: translateY(0); }
     .sheet-handle { width: 34px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 18px; }
-    .sheet-ttl { font-family: 'Lora', serif; font-size: 18px; padding: 0 20px 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+    .sheet-ttl  { font-family: 'Lora', serif; font-size: 18px; padding: 0 20px 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
 
-    .field { padding: 0 20px; margin-bottom: 13px; }
-    .field-lbl { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; display: block; }
-    .field-input {
-      width: 100%; background: var(--surface); border: 1px solid var(--border);
-      color: var(--text); padding: 10px 13px; border-radius: 8px;
-      font-family: 'DM Mono', monospace; font-size: 13px; outline: none;
-    }
-    .field-input:focus { border-color: var(--sheety); }
+    /* Fields */
+    .field      { padding: 0 20px; margin-bottom: 13px; }
+    .field-lbl  { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; display: block; }
+    .field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 13px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 13px; outline: none; }
+    .field-input:focus { border-color: #10b981; }
     select.field-input { appearance: none; cursor: pointer; }
 
-    .seg { display: flex; gap: 4px; }
-    .seg-btn {
-      flex: 1; padding: 8px 4px; border-radius: 6px; border: 1px solid var(--border);
-      background: transparent; color: var(--dim); font-family: 'DM Mono', monospace;
-      font-size: 10px; cursor: pointer; transition: all 0.15s; text-align: center;
-    }
-    .seg-btn.on { background: var(--surface2); color: var(--text); border-color: #444; }
+    /* Category combo */
+    .cat-combo  { position: relative; }
+    .cat-input  { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 13px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 13px; outline: none; }
+    .cat-input:focus { border-color: #10b981; }
+    .cat-drop   { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: #1e1e32; border: 1px solid var(--border); border-radius: 8px; z-index: 200; display: none; max-height: 200px; overflow-y: auto; }
+    .cat-drop.on { display: block; }
+    .cat-opt    { padding: 10px 13px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .cat-opt:active { background: var(--surface); }
+    .cat-dot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .cat-new    { padding: 10px 13px; font-size: 11px; color: #10b981; cursor: pointer; border-top: 1px solid var(--border); }
 
+    /* Priority seg */
+    .seg        { display: flex; gap: 4px; }
+    .seg-btn    { flex: 1; padding: 8px 4px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--dim); font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .seg-btn.on { background: var(--surf2); color: var(--text); border-color: #444; }
+
+    /* Sheet buttons */
     .sheet-btns { display: flex; gap: 10px; padding: 14px 20px 6px; }
-    .sht-btn { flex: 1; padding: 13px; border-radius: 10px; border: none; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .sht-btn    { flex: 1; padding: 13px; border-radius: 10px; border: none; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; transition: all 0.15s; }
     .sht-btn:active { transform: scale(0.97); }
-    .sht-btn.pri { background: var(--sheety); color: #fff; }
+    .sht-btn.pri { background: #10b981; color: #fff; }
     .sht-btn.sec { background: var(--surface); color: var(--dim); border: 1px solid var(--border); }
+    .sht-btn.danger { background: #ff3b3020; color: var(--crit); border: 1px solid #ff3b3040; }
 
-    /* Saving toast */
-    .toast { position: fixed; top: calc(var(--st) + 8px); right: 16px; background: var(--surface2); border: 1px solid var(--border); color: var(--dim); font-size: 10px; padding: 4px 10px; border-radius: 20px; font-family: 'DM Mono', monospace; opacity: 0; transition: opacity 0.2s; z-index: 200; pointer-events: none; }
-    .toast.on { opacity: 1; }
+    /* Manage categories */
+    .cat-row    { display: flex; align-items: center; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+    .cat-swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cat-name   { flex: 1; font-size: 13px; }
+    .cat-del    { font-size: 18px; color: var(--muted); cursor: pointer; padding: 4px; }
+    .new-cat-row { display: flex; gap: 8px; padding: 12px 20px; }
+    .new-cat-input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 12px; outline: none; }
+    .new-cat-input:focus { border-color: #10b981; }
+    .new-cat-btn { background: #10b981; color: #fff; border: none; padding: 9px 14px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; }
 
-    .empty { text-align: center; padding: 60px 24px; color: var(--muted); font-size: 12px; line-height: 1.9; }
+    /* Toast */
+    .toast      { position: fixed; top: calc(var(--st) + 8px); right: 16px; background: var(--surf2); border: 1px solid var(--border); color: var(--dim); font-size: 10px; padding: 4px 10px; border-radius: 20px; font-family: 'DM Mono', monospace; opacity: 0; transition: opacity 0.2s; z-index: 300; pointer-events: none; }
+    .toast.on   { opacity: 1; }
+    .empty      { text-align: center; padding: 60px 24px; color: var(--muted); font-size: 12px; line-height: 1.9; }
+
+    /* Color picker row */
+    .color-opts { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
+    .color-opt  { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+    .color-opt.on { border-color: #fff; transform: scale(1.15); }
   </style>
 </head>
 <body>
 
-<!-- Sign-in screen -->
+<!-- Sign-in -->
 <div id="signin">
   <div class="signin-logo">
     <h1>My List</h1>
@@ -235,37 +204,33 @@
   <div class="hdr">
     <span class="hdr-title">My List</span>
     <button class="icon-btn" onclick="toggleSearch()" title="Search">🔍</button>
+    <button class="icon-btn" onclick="openManageCats()" title="Categories">⚙️</button>
     <button class="icon-btn add-btn" onclick="openAdd()" title="Add task">＋</button>
   </div>
-
-  <div id="search-bar">
-    <input class="search-input" id="search-input" placeholder="Search tasks..." oninput="render()">
-  </div>
-
+  <div id="search-bar"><input class="search-input" id="search-input" placeholder="Search tasks..." oninput="render()"></div>
   <div class="pills" id="pills"></div>
   <div id="overdue-banner"></div>
   <div class="list-wrap" id="task-list"></div>
   <nav class="bot-nav" id="bot-nav"></nav>
 </div>
 
-<!-- Overlay -->
 <div class="overlay" id="overlay" onclick="closeSheets()"></div>
 
-<!-- Edit / Add sheet -->
+<!-- Add/Edit sheet -->
 <div class="bsheet" id="edit-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-ttl" id="edit-ttl">Add Task</div>
-
   <div class="field">
     <label class="field-lbl">Title *</label>
     <input class="field-input" id="f-title" placeholder="What needs doing?">
   </div>
   <div class="field">
     <label class="field-lbl">Category</label>
-    <select class="field-input" id="f-cat">
-      <option>Personal</option><option>Work</option>
-      <option>DameOffensive</option><option>Sheety.tools</option>
-    </select>
+    <div class="cat-combo">
+      <input class="cat-input" id="f-cat" placeholder="Type or pick a category..." autocomplete="off"
+        oninput="filterCatDrop()" onfocus="showCatDrop()" onblur="hideCatDrop()">
+      <div class="cat-drop" id="cat-drop"></div>
+    </div>
   </div>
   <div class="field">
     <label class="field-lbl">Group</label>
@@ -275,9 +240,9 @@
     <label class="field-lbl">Priority</label>
     <div class="seg" id="f-pri">
       <button class="seg-btn" data-v="Critical" onclick="setPri('Critical')">Critical</button>
-      <button class="seg-btn" data-v="High" onclick="setPri('High')">High</button>
-      <button class="seg-btn on" data-v="Med" onclick="setPri('Med')">Med</button>
-      <button class="seg-btn" data-v="Low" onclick="setPri('Low')">Low</button>
+      <button class="seg-btn" data-v="High"     onclick="setPri('High')">High</button>
+      <button class="seg-btn on" data-v="Med"   onclick="setPri('Med')">Med</button>
+      <button class="seg-btn" data-v="Low"      onclick="setPri('Low')">Low</button>
     </div>
   </div>
   <div class="field">
@@ -303,24 +268,44 @@
   </div>
 </div>
 
-<!-- Saving toast -->
+<!-- Manage Categories sheet -->
+<div class="bsheet" id="cats-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-ttl">Categories</div>
+  <div id="cats-list"></div>
+  <div class="new-cat-row">
+    <input class="new-cat-input" id="new-cat-name" placeholder="New category name...">
+    <button class="new-cat-btn" onclick="addCategory()">Add</button>
+  </div>
+  <div class="field" style="margin-top:8px;">
+    <label class="field-lbl">Color for new category</label>
+    <div class="color-opts" id="color-opts"></div>
+  </div>
+  <div class="sheet-btns">
+    <button class="sht-btn sec" onclick="closeSheets()">Done</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// SHEETS API MODULE
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// SHEETS API
+// ════════════════════════════════════════════════
 const SHEETS = (() => {
-  const CLIENT_ID  = '969172561435-26vhc1610cf9ggnqmsro406mkfb451j1.apps.googleusercontent.com';
-  const SCOPE      = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
-  const TITLE      = 'My List';
-  const TAB        = 'Tasks';
-  const HEADERS    = ['category','group','title','priority','due','notes','frequency','last_completed'];
+  const CLIENT_ID = '969172561435-26vhc1610cf9ggnqmsro406mkfb451j1.apps.googleusercontent.com';
+  const SCOPE     = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+  const TITLE     = 'My List';
+  const TASK_TAB  = 'Tasks';
+  const CAT_TAB   = 'Categories';
+  const TASK_HDRS = ['category','group','title','priority','due','notes','frequency','last_completed'];
+  const CAT_HDRS  = ['name','color'];
 
-  let token    = null;
-  let sheetId  = null;
-  let tabId    = 0;
-  let tclient  = null;
+  let token   = null;
+  let sheetId = null;
+  let taskTabId = 0;
+  let catTabId  = 0;
+  let tclient = null;
 
   function init(cb) {
     const t = setInterval(() => {
@@ -329,9 +314,8 @@ const SHEETS = (() => {
         tclient = google.accounts.oauth2.initTokenClient({
           client_id: CLIENT_ID, scope: SCOPE,
           callback: async r => {
-            if (r.error) { console.error(r); showScreen('signin'); return; }
-            token = r.access_token;
-            cb();
+            if (r.error) { showScreen('signin'); return; }
+            token = r.access_token; cb();
           }
         });
       }
@@ -339,34 +323,60 @@ const SHEETS = (() => {
   }
 
   function signIn()  { tclient.requestAccessToken({ prompt: '' }); }
-  function signOut() { if (token) google.accounts.oauth2.revoke(token); token = null; sheetId = null; }
 
   async function api(url, opts = {}) {
     const r = await fetch(url, {
       ...opts,
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers||{}) }
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers||{}) }
     });
     if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
     return r.json();
   }
 
+  async function ensureTab(name, headers) {
+    const m = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`);
+    const existing = m.sheets.find(s => s.properties.title === name);
+    if (existing) return existing.properties.sheetId;
+    const res = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+      method: 'POST',
+      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: name } } }] })
+    });
+    const newId = res.replies[0].addSheet.properties.sheetId;
+    await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${name}!A1?valueInputOption=RAW`, {
+      method: 'PUT', body: JSON.stringify({ values: [headers] })
+    });
+    return newId;
+  }
+
   async function setup() {
     const q = encodeURIComponent(`name='${TITLE}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`);
     const s = await api(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+    let isNew = false;
+
     if (s.files?.length) {
       sheetId = s.files[0].id;
-      const m = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`);
-      const t = m.sheets.find(s => s.properties.title === TAB) || m.sheets[0];
-      tabId = t.properties.sheetId;
     } else {
       const c = await api('https://sheets.googleapis.com/v4/spreadsheets', {
         method: 'POST',
-        body: JSON.stringify({ properties: { title: TITLE }, sheets: [{ properties: { title: TAB } }] })
+        body: JSON.stringify({ properties: { title: TITLE }, sheets: [{ properties: { title: TASK_TAB } }] })
       });
-      sheetId = c.spreadsheetId;
-      tabId   = c.sheets[0].properties.sheetId;
-      await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TAB}!A1:H1?valueInputOption=RAW`,
-        { method: 'PUT', body: JSON.stringify({ values: [HEADERS] }) });
+      sheetId   = c.spreadsheetId;
+      taskTabId = c.sheets[0].properties.sheetId;
+      await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A1?valueInputOption=RAW`, {
+        method: 'PUT', body: JSON.stringify({ values: [TASK_HDRS] })
+      });
+      isNew = true;
+    }
+
+    taskTabId = await ensureTab(TASK_TAB, TASK_HDRS);
+    catTabId  = await ensureTab(CAT_TAB,  CAT_HDRS);
+
+    if (isNew) {
+      // Seed default categories
+      await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A2:B3?valueInputOption=RAW`, {
+        method: 'PUT',
+        body: JSON.stringify({ values: [['Personal','#8b5cf6'],['Work','#0ea5e9']] })
+      });
     }
   }
 
@@ -383,56 +393,76 @@ const SHEETS = (() => {
       last_completed: (row[7]||'').trim(),
     };
   }
-
   function task2row(t) {
-    return [t.category, t.group, t.title, t.priority, t.due, t.notes, t.frequency, t.last_completed];
+    return [t.category, t.group, t.title, t.priority, t.due||'', t.notes||'', t.frequency||'', t.last_completed||''];
   }
 
-  async function load() {
-    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TAB}!A:H`);
+  async function loadTasks() {
+    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:H`);
     return (r.values||[]).slice(1).map((row,i) => row2task(row, i+2)).filter(t => t.title);
   }
 
-  async function add(task) {
+  async function loadCats() {
+    const r = await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A:B`);
+    return (r.values||[]).slice(1).map((row,i) => ({ _row:i+2, name:(row[0]||'').trim(), color:(row[1]||'#888').trim() })).filter(c=>c.name);
+  }
+
+  async function addTask(task) {
     const r = await api(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TAB}!A:H:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A:H:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
       { method: 'POST', body: JSON.stringify({ values: [task2row(task)] }) }
     );
     const m = r.updates.updatedRange.match(/(\d+)$/);
     return m ? parseInt(m[1]) : null;
   }
 
-  async function update(task) {
+  async function updateTask(task) {
     await api(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TAB}!A${task._row}:H${task._row}?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A${task._row}:H${task._row}?valueInputOption=RAW`,
       { method: 'PUT', body: JSON.stringify({ values: [task2row(task)] }) }
     );
   }
 
-  async function del(task) {
+  async function deleteRow(tabId, rowNum) {
     await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
       method: 'POST',
       body: JSON.stringify({ requests: [{ deleteDimension: {
-        range: { sheetId: tabId, dimension: 'ROWS', startIndex: task._row-1, endIndex: task._row }
+        range: { sheetId: tabId, dimension: 'ROWS', startIndex: rowNum-1, endIndex: rowNum }
       }}]})
     });
   }
 
-  return { init, signIn, signOut, setup, load, add, update, del };
+  async function addCat(name, color) {
+    await api(
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${CAT_TAB}!A:B:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+      { method: 'POST', body: JSON.stringify({ values: [[name, color]] }) }
+    );
+  }
+
+  return { init, signIn, setup, loadTasks, loadCats, addTask, updateTask,
+    deleteTask: t => deleteRow(taskTabId, t._row),
+    deleteCat:  c => deleteRow(catTabId,  c._row),
+    addCat,
+    get sheetId() { return sheetId; }
+  };
 })();
 
-// ═══════════════════════════════════════════════════════════
-// APP
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// APP STATE
+// ════════════════════════════════════════════════
 const PRI_ORDER = { critical:0, high:1, med:2, low:3 };
 const PRI_COLOR = { critical:'#ff3b30', high:'#f97316', med:'#3b82f6', low:'#6b7280' };
-const CAT_COLOR = { personal:'#8b5cf6', work:'#0ea5e9', dameoffensive:'#f43f5e', 'sheety.tools':'#10b981' };
-const CATS = ['Personal','Work','DameOffensive','Sheety.tools'];
-const SNOOZE = { daily:1, weekdays:1, weekly:7, biweekly:14, monthly:30, bimonthly:60, quarterly:90, semiannual:180, annual:365, 'annual / 5yr':365 };
+const PALETTE   = ['#8b5cf6','#0ea5e9','#f43f5e','#10b981','#f97316','#eab308','#ec4899','#14b8a6','#6366f1','#84cc16'];
+const SNOOZE    = { daily:1, weekdays:1, weekly:7, biweekly:14, monthly:30, bimonthly:60, quarterly:90, semiannual:180, annual:365, 'annual / 5yr':365 };
 
-let S = { tasks:[], cat:'Personal', group:'All', expanded:null, editing:null };
+let S = {
+  tasks: [], cats: [], cat: '', group: 'All',
+  expanded: null, editing: null, newCatColor: PALETTE[0]
+};
 
-// ── Screens ───────────────────────────────────────────────
+// ════════════════════════════════════════════════
+// SCREENS
+// ════════════════════════════════════════════════
 function showScreen(id) {
   ['signin','loading','app'].forEach(s => {
     const el = document.getElementById(s);
@@ -440,86 +470,87 @@ function showScreen(id) {
   });
 }
 
-// ── Boot ──────────────────────────────────────────────────
+// ════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════
 SHEETS.init(async () => {
   showScreen('loading');
   try {
     await SHEETS.setup();
-    S.tasks = await SHEETS.load();
+    [S.tasks, S.cats] = await Promise.all([SHEETS.loadTasks(), SHEETS.loadCats()]);
+    S.cat = S.cats[0]?.name || '';
     showScreen('app');
     render();
   } catch(e) {
     console.error(e);
-    alert('Something went wrong. Please try again.');
+    alert('Something went wrong loading your list. Please refresh and try again.');
     showScreen('signin');
   }
 });
 
-// ── Helpers ───────────────────────────────────────────────
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+function todayStr()  { return new Date().toISOString().split('T')[0]; }
+function catColor(name) {
+  const c = S.cats.find(c => c.name.toLowerCase() === name.toLowerCase());
+  return c?.color || '#888';
+}
 function isDue(due) {
   if (!due) return false;
-  try { return new Date(due + 'T00:00:00') <= new Date(new Date().toDateString()); }
-  catch { return false; }
+  return new Date(due + 'T00:00:00') <= new Date(new Date().toDateString());
 }
-
 function isSnoozed(t) {
   const f = t.frequency.toLowerCase();
   if (!f || !t.last_completed) return false;
   const days = Math.floor((new Date(todayStr()) - new Date(t.last_completed)) / 86400000);
   return days < (SNOOZE[f] || 1);
 }
-
 function isOverdue(t) { return t.due && !t.frequency && isDue(t.due); }
-
 function fmtDue(d) {
   if (!d) return '';
-  try { return new Date(d + 'T00:00:00').toLocaleDateString('en-CA', { month:'short', day:'numeric' }); }
+  try { return new Date(d+'T00:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric'}); }
   catch { return d; }
 }
-
 function pColor(p) { return PRI_COLOR[p.toLowerCase()] || '#6b7280'; }
-function cColor(c) { return CAT_COLOR[c.toLowerCase()] || '#888'; }
-
-function toast(msg, ms = 1600) {
+function toast(msg, ms=1600) {
   const el = document.getElementById('toast');
   el.textContent = msg; el.classList.add('on');
   setTimeout(() => el.classList.remove('on'), ms);
 }
 
-// ── Render ────────────────────────────────────────────────
-function render() {
-  renderNav(); renderPills(); renderList(); renderBanner();
-}
+// ════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════
+function render() { renderNav(); renderPills(); renderList(); renderBanner(); }
 
 function renderNav() {
-  document.getElementById('bot-nav').innerHTML = CATS.map(c => {
-    const col = cColor(c);
-    const on  = S.cat === c;
-    const lbl = c === 'DameOffensive' ? 'DAME' : c === 'Sheety.tools' ? 'SHEETY' : c.toUpperCase();
-    return `<button class="nav-tab ${on?'on':''}" style="${on?`color:${col}`:''}" onclick="setCat('${c}')">
-      <div class="nav-dot" style="${on?`background:${col}`:''}"></div>${lbl}
+  document.getElementById('bot-nav').innerHTML = S.cats.map(c => {
+    const on  = S.cat === c.name;
+    const lbl = c.name.length > 8 ? c.name.substring(0,7)+'…' : c.name;
+    return `<button class="nav-tab ${on?'on':''}" style="${on?`color:${c.color}`:''}" onclick="setCat('${c.name.replace(/'/g,"\\'")}')">
+      <div class="nav-dot" style="${on?`background:${c.color}`:''}"></div>
+      ${lbl.toUpperCase()}
     </button>`;
   }).join('');
 }
 
 function renderPills() {
-  const groups = ['All', ...new Set(S.tasks.filter(t => t.category===S.cat).map(t=>t.group).filter(Boolean))];
-  const col = cColor(S.cat);
-  const cnt = {};
+  const groups = ['All',...new Set(S.tasks.filter(t=>t.category===S.cat).map(t=>t.group).filter(Boolean))];
+  const col    = catColor(S.cat);
+  const cnt    = {};
   S.tasks.filter(t=>t.category===S.cat).forEach(t=>{ cnt[t.group]=(cnt[t.group]||0)+1; });
   document.getElementById('pills').innerHTML = groups.map(g =>
-    `<button class="pill ${g===S.group?'on':''}" style="${g===S.group?`color:${col};border-color:${col}40`:''}" onclick="setGroup('${g}')">
-      ${g}${g!=='All'&&cnt[g]?` <span style="opacity:.5">${cnt[g]}</span>`:''}
+    `<button class="pill ${g===S.group?'on':''}" style="${g===S.group?`color:${col};border-color:${col}40`:''}" onclick="setGroup('${g.replace(/'/g,"\\'")}')">
+      ${g}${g!=='All'&&cnt[g]?` <span style="opacity:.4">${cnt[g]}</span>`:''}
     </button>`
   ).join('');
 }
 
 function renderBanner() {
-  const n = S.tasks.filter(t => isOverdue(t)).length;
+  const n = S.tasks.filter(t=>isOverdue(t)).length;
   const b = document.getElementById('overdue-banner');
-  if (n) { b.textContent = `⚠ ${n} overdue task${n>1?'s':''} across your list`; b.classList.add('on'); }
+  if (n) { b.textContent=`⚠ ${n} overdue task${n>1?'s':''} across your list`; b.classList.add('on'); }
   else   { b.classList.remove('on'); }
 }
 
@@ -532,14 +563,14 @@ function renderList() {
   ).sort((a,b) => PRI_ORDER[a.priority.toLowerCase()] - PRI_ORDER[b.priority.toLowerCase()]);
 
   if (!filtered.length) {
-    document.getElementById('task-list').innerHTML = `<div class="empty">No tasks here yet.<br>Tap + to add one.</div>`;
+    document.getElementById('task-list').innerHTML = `<div class="empty">No tasks here yet.<br>Tap ＋ to add one.</div>`;
     return;
   }
 
   const grouped = {};
   filtered.forEach(t => { const k=t.group||'Other'; (grouped[k]=grouped[k]||[]).push(t); });
-  const sections = S.group!=='All' ? [[S.group, grouped[S.group]||[]]] : Object.entries(grouped);
-  const col = cColor(S.cat);
+  const sections = S.group!=='All' ? [[S.group,grouped[S.group]||[]]] : Object.entries(grouped);
+  const col = catColor(S.cat);
 
   document.getElementById('task-list').innerHTML = sections.map(([g,tasks]) => `
     <div class="group-sec">
@@ -548,7 +579,7 @@ function renderList() {
         <div class="group-line" style="color:${col}"></div>
         <span class="group-cnt">${tasks.length}</span>
       </div>
-      ${tasks.map(t => cardHtml(t, col)).join('')}
+      ${tasks.map(t=>cardHtml(t,col)).join('')}
     </div>`).join('');
 
   filtered.forEach(t => attachSwipe(t._row));
@@ -562,16 +593,15 @@ function cardHtml(t, accentCol) {
   const sn  = isSnoozed(t);
   const exp = S.expanded === t._row;
 
-  const dueLbl   = t.due ? `<span class="due-lbl ${ov?'late':''}">${ov?'⚠ ':''}${fmtDue(t.due)}</span>` : '';
-  const freqLbl  = t.frequency ? `<span class="freq-lbl">${t.frequency}${sn?' ✓':''}</span>` : '';
-  const badge    = `<span class="badge" style="background:${p==='critical'?pc:pc+'22'};color:${p==='critical'?'#fff':pc}">${t.priority.toUpperCase()}</span>`;
-  const noteHtml = t.notes ? `<div class="card-notes">${t.notes}</div>` : '';
-
-  const acts = exp ? `<div class="card-actions on">
-    ${t.frequency ? `<button class="act-btn" style="border-color:var(--sheety);color:var(--sheety)" onclick="markDone(${t._row})">✓ Done Today</button>` : ''}
+  const dueLbl  = t.due      ? `<span class="due-lbl ${ov?'late':''}">${ov?'⚠ ':''}${fmtDue(t.due)}</span>` : '';
+  const freqLbl = t.frequency? `<span class="freq-lbl">${t.frequency}${sn?' ✓':''}</span>` : '';
+  const badge   = `<span class="badge" style="background:${p==='critical'?pc:pc+'22'};color:${p==='critical'?'#fff':pc}">${t.priority.toUpperCase()}</span>`;
+  const notes   = t.notes    ? `<div class="card-notes">${t.notes}</div>` : '';
+  const acts    = exp ? `<div class="card-actions on">
+    ${t.frequency?`<button class="act-btn" style="border-color:#10b981;color:#10b981" onclick="markDone(${t._row})">✓ Done Today</button>`:''}
     <button class="act-btn" style="border-color:var(--med);color:var(--med)" onclick="openEdit(${t._row})">✏ Edit</button>
     <button class="act-btn" style="border-color:${pc};color:${pc}" onclick="cyclePri(${t._row})">↕ Priority</button>
-    <button class="act-btn" style="border-color:var(--critical);color:var(--critical)" onclick="delTask(${t._row})">✕ Delete</button>
+    <button class="act-btn" style="border-color:var(--crit);color:var(--crit)" onclick="delTask(${t._row})">✕ Delete</button>
   </div>` : '';
 
   return `<div class="card-wrap" id="wrap-${t._row}">
@@ -581,39 +611,42 @@ function cardHtml(t, accentCol) {
         <span class="card-title">${t.title}</span>
         <div class="card-meta">${dueLbl}${freqLbl}${badge}</div>
       </div>
-      ${noteHtml}${acts}
+      ${notes}${acts}
     </div>
   </div>`;
 }
 
-// ── Swipe to delete ───────────────────────────────────────
+// ════════════════════════════════════════════════
+// SWIPE TO DELETE
+// ════════════════════════════════════════════════
 function attachSwipe(rowId) {
   const card = document.getElementById(`card-${rowId}`);
   if (!card) return;
   let sx=0, cx=0;
-
   card.addEventListener('touchstart', e => { sx=e.touches[0].clientX; cx=0; card.classList.add('swiping'); }, {passive:true});
-  card.addEventListener('touchmove', e => {
+  card.addEventListener('touchmove',  e => {
     const dx = e.touches[0].clientX - sx;
     if (dx < -8) { cx=Math.max(dx,-88); card.style.transform=`translateX(${cx}px)`; }
   }, {passive:true});
   card.addEventListener('touchend', () => {
     card.classList.remove('swiping');
     if (cx < -60) {
-      card.style.transform = 'translateX(-80px)';
+      card.style.transform='translateX(-80px)';
       setTimeout(() => {
         if (confirm('Delete this task?')) delTask(rowId);
-        else card.style.transform = '';
+        else card.style.transform='';
       }, 80);
     } else { card.style.transform=''; }
     cx=0;
   });
 }
 
-// ── Actions ───────────────────────────────────────────────
+// ════════════════════════════════════════════════
+// ACTIONS
+// ════════════════════════════════════════════════
 function setCat(c)   { S.cat=c; S.group='All'; S.expanded=null; render(); }
 function setGroup(g) { S.group=g; S.expanded=null; render(); }
-function toggleExp(r){ S.expanded = S.expanded===r ? null : r; render(); }
+function toggleExp(r){ S.expanded=S.expanded===r?null:r; render(); }
 
 function toggleSearch() {
   const b = document.getElementById('search-bar');
@@ -626,17 +659,17 @@ async function markDone(rowId) {
   const t = S.tasks.find(t=>t._row===rowId); if (!t) return;
   t.last_completed = todayStr();
   toast('marking done...');
-  try { await SHEETS.update(t); toast('done ✓'); }
+  try { await SHEETS.updateTask(t); toast('done ✓'); }
   catch(e) { console.error(e); alert('Save failed.'); }
   S.expanded=null; render();
 }
 
 async function cyclePri(rowId) {
   const t = S.tasks.find(t=>t._row===rowId); if (!t) return;
-  const order = ['Critical','High','Med','Low'];
-  const i = order.findIndex(p=>p.toLowerCase()===t.priority.toLowerCase());
-  t.priority = order[(i+1)%4];
-  try { await SHEETS.update(t); } catch(e) { console.error(e); }
+  const o = ['Critical','High','Med','Low'];
+  const i = o.findIndex(p=>p.toLowerCase()===t.priority.toLowerCase());
+  t.priority = o[(i+1)%4];
+  try { await SHEETS.updateTask(t); } catch(e) { console.error(e); }
   render();
 }
 
@@ -644,16 +677,50 @@ async function delTask(rowId) {
   const t = S.tasks.find(t=>t._row===rowId); if (!t) return;
   toast('deleting...');
   try {
-    await SHEETS.del(t);
-    S.tasks = await SHEETS.load();
+    await SHEETS.deleteTask(t);
+    S.tasks = await SHEETS.loadTasks();
     toast('deleted ✓');
   } catch(e) { console.error(e); alert('Delete failed.'); }
   S.expanded=null; render();
 }
 
-// ── Edit / Add sheet ──────────────────────────────────────
+// ════════════════════════════════════════════════
+// CATEGORY COMBO
+// ════════════════════════════════════════════════
+function showCatDrop() {
+  filterCatDrop();
+  document.getElementById('cat-drop').classList.add('on');
+}
+function hideCatDrop() { setTimeout(()=>document.getElementById('cat-drop').classList.remove('on'), 150); }
+
+function filterCatDrop() {
+  const val = document.getElementById('f-cat').value.toLowerCase();
+  const matches = S.cats.filter(c => c.name.toLowerCase().includes(val));
+  const newOpt  = val && !S.cats.find(c=>c.name.toLowerCase()===val)
+    ? `<div class="cat-new" onmousedown="quickAddCat('${val}')">＋ Create "${val}"</div>` : '';
+  document.getElementById('cat-drop').innerHTML =
+    matches.map(c=>`<div class="cat-opt" onmousedown="pickCat('${c.name.replace(/'/g,"\\'")}')">
+      <div class="cat-dot" style="background:${c.color}"></div>${c.name}
+    </div>`).join('') + newOpt;
+}
+
+function pickCat(name) { document.getElementById('f-cat').value=name; }
+
+async function quickAddCat(name) {
+  const color = PALETTE[S.cats.length % PALETTE.length];
+  try {
+    await SHEETS.addCat(name, color);
+    S.cats = await SHEETS.loadCats();
+    document.getElementById('f-cat').value = name;
+    render();
+  } catch(e) { console.error(e); }
+}
+
+// ════════════════════════════════════════════════
+// ADD / EDIT TASK
+// ════════════════════════════════════════════════
 function setPri(v) {
-  document.querySelectorAll('#f-pri .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.v===v));
+  document.querySelectorAll('#f-pri .seg-btn').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
 }
 
 function openAdd() {
@@ -680,47 +747,108 @@ function openEdit(rowId) {
   document.getElementById('f-freq').value  = t.frequency;
   document.getElementById('f-notes').value = t.notes;
   setPri(t.priority);
-  S.expanded = null;
+  S.expanded=null;
   openSheet('edit-sheet');
 }
 
 async function saveTask() {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
-  const pri = document.querySelector('#f-pri .seg-btn.on')?.dataset.v || 'Med';
+  const pri  = document.querySelector('#f-pri .seg-btn.on')?.dataset.v || 'Med';
+  const catVal = document.getElementById('f-cat').value.trim() || S.cat;
+
+  // Auto-create category if new
+  if (catVal && !S.cats.find(c=>c.name.toLowerCase()===catVal.toLowerCase())) {
+    const color = PALETTE[S.cats.length % PALETTE.length];
+    await SHEETS.addCat(catVal, color);
+    S.cats = await SHEETS.loadCats();
+  }
+
   const data = {
-    category: document.getElementById('f-cat').value,
-    group:    document.getElementById('f-group').value.trim(),
+    category: catVal, group: document.getElementById('f-group').value.trim(),
     title, priority: pri,
     due:      document.getElementById('f-due').value,
     notes:    document.getElementById('f-notes').value.trim(),
     frequency: document.getElementById('f-freq').value,
     last_completed: S.editing?.last_completed || '',
   };
-  closeSheets();
-  toast('saving...');
+  closeSheets(); toast('saving...');
   try {
     if (S.editing) {
       data._row = S.editing._row;
-      await SHEETS.update(data);
+      await SHEETS.updateTask(data);
       const i = S.tasks.findIndex(t=>t._row===S.editing._row);
-      if (i!==-1) S.tasks[i] = data;
+      if (i!==-1) S.tasks[i]=data;
     } else {
-      const n = await SHEETS.add(data);
-      data._row = n;
-      S.tasks.push(data);
+      const n = await SHEETS.addTask(data);
+      data._row = n; S.tasks.push(data);
     }
-    toast('saved ✓');
     S.cat = data.category;
+    toast('saved ✓');
   } catch(e) { console.error(e); alert('Save failed. Please try again.'); }
   render();
 }
 
+// ════════════════════════════════════════════════
+// MANAGE CATEGORIES
+// ════════════════════════════════════════════════
+function renderColorPicker() {
+  document.getElementById('color-opts').innerHTML = PALETTE.map(c=>
+    `<div class="color-opt ${S.newCatColor===c?'on':''}" style="background:${c}" onclick="S.newCatColor='${c}';renderColorPicker()"></div>`
+  ).join('');
+}
+
+function openManageCats() {
+  renderCatsList();
+  renderColorPicker();
+  document.getElementById('new-cat-name').value='';
+  openSheet('cats-sheet');
+}
+
+function renderCatsList() {
+  document.getElementById('cats-list').innerHTML = S.cats.map(c=>
+    `<div class="cat-row">
+      <div class="cat-swatch" style="background:${c.color}"></div>
+      <span class="cat-name">${c.name}</span>
+      <span class="cat-del" onclick="deleteCat(${c._row})">×</span>
+    </div>`
+  ).join('');
+}
+
+async function addCategory() {
+  const name = document.getElementById('new-cat-name').value.trim();
+  if (!name) return;
+  if (S.cats.find(c=>c.name.toLowerCase()===name.toLowerCase())) { toast('already exists'); return; }
+  toast('adding...');
+  try {
+    await SHEETS.addCat(name, S.newCatColor);
+    S.cats = await SHEETS.loadCats();
+    document.getElementById('new-cat-name').value='';
+    S.newCatColor = PALETTE[S.cats.length % PALETTE.length];
+    renderCatsList(); renderColorPicker(); renderNav(); toast('added ✓');
+    if (!S.cat) { S.cat=name; render(); }
+  } catch(e) { console.error(e); alert('Failed to add category.'); }
+}
+
+async function deleteCat(rowNum) {
+  const c = S.cats.find(c=>c._row===rowNum); if (!c) return;
+  if (!confirm(`Delete category "${c.name}"? Tasks in this category will remain.`)) return;
+  toast('deleting...');
+  try {
+    await SHEETS.deleteCat(c);
+    S.cats = await SHEETS.loadCats();
+    if (S.cat===c.name) S.cat=S.cats[0]?.name||'';
+    renderCatsList(); render(); toast('deleted ✓');
+  } catch(e) { console.error(e); alert('Delete failed.'); }
+}
+
+// ════════════════════════════════════════════════
+// SHEET UTILS
+// ════════════════════════════════════════════════
 function openSheet(id) {
   document.getElementById('overlay').classList.add('on');
   document.getElementById(id).classList.add('on');
 }
-
 function closeSheets() {
   document.getElementById('overlay').classList.remove('on');
   document.querySelectorAll('.bsheet').forEach(s=>s.classList.remove('on'));
