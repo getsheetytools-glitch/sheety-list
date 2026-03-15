@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0f0f13">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="My Sheety List">
@@ -273,6 +276,16 @@
 </div>
 
 <div class="overlay" id="overlay" onclick="closeSheets()"></div>
+
+<!-- Task action sheet (from briefing) -->
+<div class="bsheet" id="action-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-ttl" id="action-ttl" style="font-size:17px;padding-bottom:12px;"></div>
+  <div id="action-btns" style="padding: 0 24px 8px; display:flex; flex-direction:column; gap:10px;"></div>
+  <div class="sheet-btns">
+    <button class="sht-btn sec" onclick="closeSheets()">Cancel</button>
+  </div>
+</div>
 
 <!-- Briefing sheet -->
 <div class="bsheet" id="briefing-sheet">
@@ -1013,7 +1026,33 @@ function openBriefing() {
 // ════════════════════════════════════════════════
 function openSheet(id) { document.getElementById('overlay').classList.add('on'); document.getElementById(id).classList.add('on'); }
 function closeSheets() { document.getElementById('overlay').classList.remove('on'); document.querySelectorAll('.bsheet').forEach(s=>s.classList.remove('on')); }
-function openEditFromBriefing(rowId) { closeSheets(); setTimeout(()=>openEdit(rowId), 120); }
+
+function openEditFromBriefing(rowId) {
+  const t = S.tasks.find(t=>t._row===rowId); if(!t) return;
+  const p  = t.priority.toLowerCase();
+  const pc = PRI_COLOR[p]||'#6b7280';
+
+  document.getElementById('action-ttl').textContent = t.title;
+
+  const btns = [];
+  if (t.completed !== 'Y') {
+    btns.push(`<button class="sht-btn pri" style="background:var(--green)" onclick="markTaskDone(${t._row});closeSheets()">✓ Done</button>`);
+  } else {
+    btns.push(`<button class="sht-btn sec" onclick="unmarkTaskDone(${t._row});closeSheets()">↩ Undo Done</button>`);
+  }
+  if (t.frequency) {
+    btns.push(`<button class="sht-btn pri" style="background:#059669" onclick="markDone(${t._row});closeSheets()">✓ Done Today (snooze)</button>`);
+  }
+  btns.push(`<button class="sht-btn sec" style="border-color:var(--med);color:var(--med)" onclick="closeSheets();setTimeout(()=>openEdit(${t._row}),120)">✏ Edit</button>`);
+  btns.push(`<button class="sht-btn sec" style="border-color:${pc};color:${pc}" onclick="cyclePri(${t._row})">↕ Cycle Priority (currently ${t.priority})</button>`);
+  btns.push(`<button class="sht-btn sec" style="border-color:var(--crit);color:var(--crit)" onclick="if(confirm('Delete this task?')){delTask(${t._row});closeSheets()}">🗑 Delete</button>`);
+
+  document.getElementById('action-btns').innerHTML = btns.join('');
+
+  // Close briefing first then open action sheet
+  document.getElementById('briefing-sheet').classList.remove('on');
+  setTimeout(() => openSheet('action-sheet'), 80);
+}
 </script>
 <script>
   if ('serviceWorker' in navigator) {
