@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0f0f13">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -13,7 +13,7 @@
   <title>My Sheety List — Sheety.tools</title>
   <script>
     // Force reload if cached version is stale (iOS PWA fix)
-    const APP_VERSION = '2026-03-14-v2';
+    const APP_VERSION = '2026-03-15-v1';
     if (localStorage.getItem('app-version') !== APP_VERSION) {
       localStorage.setItem('app-version', APP_VERSION);
       if (localStorage.getItem('app-version-loaded')) {
@@ -1180,13 +1180,13 @@ function renderBriefingContent() {
   const radar = tasks.filter(t=>!t.frequency&&!isDue(t.due)&&!isOverdue(t));
   const diversions = pickDiversions(radar, 3, 5);
 
-  function briefCard(t, showFreq=false, showCat=false) {
+  function briefCard(t, showFreq=false) {
     const p  = t.priority.toLowerCase();
     const pc = PRI_COLOR[p]||'#6b7280';
     const bdr= p==='critical'?pc:pc+'80';
     const due= t.due ? `<span class="due-lbl ${isOverdue(t)?'late':''}" style="font-size:12px">${isOverdue(t)?'⚠ ':''}${fmtDue(t.due)}</span>` : '';
     const freq= showFreq&&t.frequency ? `<span class="freq-lbl">${t.frequency}</span>` : '';
-    const cat = showCat ? `<span class="badge" style="background:${catColor(t.category)}18;color:${catColor(t.category)};font-size:10px">${t.category}</span>` : '';
+    const cat = `<span class="badge" style="background:${catColor(t.category)}18;color:${catColor(t.category)};font-size:10px">${t.category}</span>`;
     const badge= `<span class="badge" style="background:${p==='critical'?pc:pc+'22'};color:${p==='critical'?'#fff':pc}">${t.priority.toUpperCase()}</span>`;
     return `<div class="briefing-card" style="border-left-color:${bdr};cursor:pointer" onclick="openEditFromBriefing(${t._row})">
       <div class="briefing-card-title">${t.title}</div>
@@ -1194,18 +1194,18 @@ function renderBriefingContent() {
     </div>`;
   }
 
-  function section(title, color, tasks, showFreq=false, showCat=false) {
+  function section(title, color, tasks, showFreq=false) {
     if(!tasks.length) return '';
     return `<div class="briefing-section">
       <div class="briefing-section-title" style="color:${color}">${title}</div>
-      ${tasks.map(t=>briefCard(t,showFreq,showCat)).join('')}
+      ${tasks.map(t=>briefCard(t,showFreq)).join('')}
     </div>`;
   }
 
   const html = [
     section('🎯 Today\'s Focus', '#ff7070', focus),
     rotation.length ? section('🔁 On the Rotation', '#0ea5e9', rotation, true) : '',
-    diversions.length ? section('💡 Suggested Diversions', '#888', diversions, false, true) : '',
+    diversions.length ? section('💡 Suggested Diversions', '#888', diversions) : '',
   ].join('');
 
   document.getElementById('briefing-content').innerHTML = html;
