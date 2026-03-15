@@ -13,7 +13,7 @@
   <title>My Sheety List — Sheety.tools</title>
   <script>
     // Force reload if cached version is stale (iOS PWA fix)
-    const APP_VERSION = '2026-03-15-v2';
+    const APP_VERSION = '2026-03-15-v3';
     if (localStorage.getItem('app-version') !== APP_VERSION) {
       localStorage.setItem('app-version', APP_VERSION);
       if (localStorage.getItem('app-version-loaded')) {
@@ -243,7 +243,7 @@
     <p>BY SHEETY.TOOLS</p>
   </div>
   <p class="signin-desc">Sign in with Google and we'll create your task sheet automatically — nothing to set up.</p>
-  <button class="google-btn" onclick="SHEETS.signIn()">
+  <button class="google-btn" onclick="handleSignIn()">
     <svg class="g-icon" viewBox="0 0 24 24">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -1023,8 +1023,18 @@ async function saveTask() {
   render();
 }
 
-// ════════════════════════════════════════════════
-// SNOOZE
+function handleSignIn() {
+  // If GSI client isn't ready yet, wait briefly and retry
+  if (!window.google?.accounts) {
+    toast('loading... try again in a moment');
+    setTimeout(() => {
+      if (window.google?.accounts) SHEETS.signIn();
+      else toast('sign-in unavailable — check your connection');
+    }, 1500);
+    return;
+  }
+  SHEETS.signIn();
+}
 // ════════════════════════════════════════════════
 let snoozeTargetId = null;
 
