@@ -187,6 +187,18 @@
     .kofi-link  { display: inline-block; margin-top: 8px; background: #a855f7; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; text-decoration: none; letter-spacing: 0.04em; }
     .kofi-close { font-size: 26px; color: var(--muted); cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
 
+    /* Briefing button */
+    #briefing-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 18px 2px; padding: 13px; background: #0f1a14; border: 1px solid #10b98150; border-radius: 14px; color: var(--green); font-family: 'DM Mono', monospace; font-size: 14px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s; flex-shrink: 0; width: calc(100% - 36px); }
+    #briefing-btn:active { background: #131f18; transform: scale(0.98); }
+
+    /* Briefing content */
+    .briefing-section { margin-bottom: 20px; }
+    .briefing-section-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .briefing-card { background: var(--surface); border-left: 3px solid transparent; border-radius: 10px; padding: 12px 14px; margin-bottom: 6px; }
+    .briefing-card-title { font-size: 15px; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+    .briefing-card-meta  { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+    .briefing-empty { font-size: 13px; color: var(--muted); font-style: italic; padding: 8px 0; }
+
     /* Toast */
     .toast { position: fixed; top: calc(var(--st) + 12px); right: 18px; background: var(--surf2); border: 1px solid var(--border); color: var(--dim); font-size: 13px; padding: 8px 14px; border-radius: 24px; font-family: 'DM Mono', monospace; opacity: 0; transition: opacity 0.2s; z-index: 300; pointer-events: none; }
     .toast.on { opacity: 1; }
@@ -229,6 +241,7 @@
     <button class="icon-btn" onclick="openManageCats()" title="Categories">⚙️</button>
     <button class="icon-btn add-btn" onclick="openAdd()" title="Add task">＋</button>
   </div>
+  <button id="briefing-btn" onclick="openBriefing()">☀ Today's Briefing</button>
 
   <div id="search-bar">
     <input class="search-input" id="search-input" placeholder="Search tasks..." oninput="render()">
@@ -260,6 +273,16 @@
 </div>
 
 <div class="overlay" id="overlay" onclick="closeSheets()"></div>
+
+<!-- Briefing sheet -->
+<div class="bsheet" id="briefing-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-ttl">☀ Today's Briefing</div>
+  <div id="briefing-content" style="padding: 0 24px 8px;"></div>
+  <div class="sheet-btns">
+    <button class="sht-btn sec" onclick="closeSheets()">Done</button>
+  </div>
+</div>
 
 <!-- Add/Edit sheet -->
 <div class="bsheet" id="edit-sheet">
@@ -827,6 +850,101 @@ async function deleteCat(rowNum) {
     if(S.cat===c.name) S.cat=S.cats[0]?.name||'';
     renderCatsList(); render(); toast('deleted ✓');
   } catch(e){ console.error(e); alert('Delete failed.'); }
+}
+
+// ════════════════════════════════════════════════
+// BRIEFING
+// ════════════════════════════════════════════════
+function openBriefing() {
+  const PRI_WEIGHT  = { critical:8, high:5, med:2, low:1 };
+  const SNOOZE_DAYS = { daily:1, weekdays:1, weekly:7, biweekly:14, monthly:30, bimonthly:60, quarterly:90, semiannual:180, annual:365, 'annual / 5yr':365 };
+  const isWeekend   = [0,6].includes(new Date().getDay());
+  const WORK_CATS   = ['work'];
+
+  function suppressed(t) { return isWeekend && WORK_CATS.includes(t.category.toLowerCase()); }
+  function snoozed(t) {
+    const f=t.frequency.toLowerCase();
+    if(!f||!t.last_completed) return false;
+    const days=Math.floor((new Date(todayStr())-new Date(t.last_completed))/86400000);
+    return days<(SNOOZE_DAYS[f]||1);
+  }
+
+  const tasks = S.tasks.filter(t=>!suppressed(t));
+
+  // Today's focus — overdue or date-due
+  const focus = tasks.filter(t=>isOverdue(t)||isDue(t.due))
+    .sort((a,b)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b.priority.toLowerCase()]);
+
+  // Rotation — active recurring tasks not snoozed
+  const FREQ_DAILY     = new Set(['daily','weekdays']);
+  const FREQ_WEEKLY    = new Set(['weekly','biweekly']);
+  const FREQ_MONTHLY   = new Set(['monthly','bimonthly']);
+  const FREQ_INFREQ    = new Set(['quarterly','semiannual','annual','annual / 5yr']);
+
+  const recurring = tasks.filter(t=>t.frequency&&!snoozed(t));
+  const dailies   = recurring.filter(t=>FREQ_DAILY.has(t.frequency.toLowerCase()));
+  const weeklies  = weightedSample(recurring.filter(t=>FREQ_WEEKLY.has(t.frequency.toLowerCase())), 3);
+  const monthlies = weightedSample(recurring.filter(t=>FREQ_MONTHLY.has(t.frequency.toLowerCase())), 2);
+  const infreq    = weightedSample(recurring.filter(t=>FREQ_INFREQ.has(t.frequency.toLowerCase())), 1);
+  const rotation  = [...dailies, ...weeklies, ...monthlies, ...infreq];
+
+  // Diversions — non-recurring, non-due, mixed categories
+  const radar = tasks.filter(t=>!t.frequency&&!isDue(t.due)&&!isOverdue(t));
+  const diversions = pickDiversions(radar, 3, 5);
+
+  function weightedSample(arr, n) {
+    if (!arr.length) return [];
+    const scored = arr.map(t=>({ t, s: PRI_WEIGHT[t.priority.toLowerCase()]||1 + Math.random()*2 }))
+      .sort((a,b)=>b.s-a.s);
+    const pool = scored.slice(0, Math.max(n*2, arr.length)).map(x=>x.t);
+    pool.sort(()=>Math.random()-0.5);
+    return pool.slice(0,n);
+  }
+
+  function pickDiversions(arr, min, max) {
+    const buckets={};
+    arr.forEach(t=>{ const k=t.category.toLowerCase(); (buckets[k]=buckets[k]||[]).push(t); });
+    Object.values(buckets).forEach(b=>b.sort((a,b2)=>PRI_ORDER[a.priority.toLowerCase()]-PRI_ORDER[b2.priority.toLowerCase()]));
+    const cats=Object.keys(buckets).sort(()=>Math.random()-0.5);
+    const result=[];
+    cats.forEach(c=>{ if(result.length<max&&buckets[c].length) result.push(buckets[c][0]); });
+    if(result.length<min) {
+      cats.forEach(c=>{ buckets[c].slice(1).forEach(t=>{ if(result.length<max&&!result.includes(t)) result.push(t); }); });
+    }
+    result.sort(()=>Math.random()-0.5);
+    return result.slice(0,max);
+  }
+
+  function briefCard(t, showFreq=false, showCat=false) {
+    const p  = t.priority.toLowerCase();
+    const pc = PRI_COLOR[p]||'#6b7280';
+    const bdr= p==='critical'?pc:pc+'80';
+    const due= t.due ? `<span class="due-lbl ${isOverdue(t)?'late':''}" style="font-size:12px">${isOverdue(t)?'⚠ ':''}${fmtDue(t.due)}</span>` : '';
+    const freq= showFreq&&t.frequency ? `<span class="freq-lbl">${t.frequency}</span>` : '';
+    const cat = showCat ? `<span class="badge" style="background:${catColor(t.category)}18;color:${catColor(t.category)};font-size:10px">${t.category}</span>` : '';
+    const badge= `<span class="badge" style="background:${p==='critical'?pc:pc+'22'};color:${p==='critical'?'#fff':pc}">${t.priority.toUpperCase()}</span>`;
+    return `<div class="briefing-card" style="border-left-color:${bdr}">
+      <div class="briefing-card-title">${t.title}</div>
+      <div class="briefing-card-meta">${due}${freq}${cat}${badge}</div>
+    </div>`;
+  }
+
+  function section(title, color, tasks, showFreq=false, showCat=false) {
+    if(!tasks.length) return '';
+    return `<div class="briefing-section">
+      <div class="briefing-section-title" style="color:${color}">${title}</div>
+      ${tasks.map(t=>briefCard(t,showFreq,showCat)).join('')}
+    </div>`;
+  }
+
+  const html = [
+    focus.length    ? section('🎯 Today\'s Focus', '#ff7070', focus) : `<div class="briefing-section"><div class="briefing-section-title" style="color:var(--green)">🎯 Today\'s Focus</div><p class="briefing-empty">Nothing date-due today.</p></div>`,
+    rotation.length ? section('🔁 On the Rotation', '#0ea5e9', rotation, true) : '',
+    diversions.length ? section('💡 Suggested Diversions', '#888', diversions, false, true) : '',
+  ].join('');
+
+  document.getElementById('briefing-content').innerHTML = html;
+  openSheet('briefing-sheet');
 }
 
 // ════════════════════════════════════════════════
