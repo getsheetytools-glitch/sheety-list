@@ -13,7 +13,7 @@
   <title>My Sheety List — Sheety.tools</title>
   <script>
     // Force reload if cached version is stale (iOS PWA fix)
-    const APP_VERSION = '2026-03-15-v3';
+    const APP_VERSION = '2026-03-15-v4';
     if (localStorage.getItem('app-version') !== APP_VERSION) {
       localStorage.setItem('app-version', APP_VERSION);
       if (localStorage.getItem('app-version-loaded')) {
@@ -563,8 +563,6 @@ const SHEETS = (() => {
   }
   async function updateTask(task) {
     await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A${task._row}:J${task._row}?valueInputOption=RAW`,
-      { method:'PUT', body:JSON.stringify({ values:[task2row(task)] }) });
-  }
       { method:'PUT', body:JSON.stringify({ values:[task2row(task)] }) });
   }
   async function deleteRow(tabId, rowNum) {
