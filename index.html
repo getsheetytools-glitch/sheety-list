@@ -298,6 +298,12 @@
     }
     #signin-footer a:hover { color: rgba(255,255,255,0.6); }
     #signin-footer .dot { width: 2px; height: 2px; border-radius: 50%; background: rgba(255,255,255,0.2); display: inline-block; }
+    @media (display-mode: standalone) {
+      #site-bar,
+      #signin-footer { display: none; }
+      #root { padding-top: var(--st); }
+    }
+
 
     /* ─── Root layout tweak ─── */
     #root {
@@ -323,6 +329,12 @@
   <a href="https://sheety.tools" id="site-bar-back">← All tools</a>
 </header>
 
+<script>
+  if (window.navigator.standalone === true) {
+    document.getElementById('site-bar').style.display = 'none';
+    document.getElementById('signin-footer').style.display = 'none';
+  }
+</script>
 
 <!-- Sign-in -->
 <div id="signin">
