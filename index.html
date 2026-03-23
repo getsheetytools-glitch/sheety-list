@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0f0f13">
+  <meta name="theme-color" content="#18181b">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="My Sheety List">
-  <title>My Sheety List — Sheety.tools</title>
+  <meta name="apple-mobile-web-app-title" content="Sheety List">
+  <title>Sheety List — Sheety Tools</title>
   <script>
     // Force reload if cached version is stale (iOS PWA fix)
     const APP_VERSION = '2026-03-15-v4';
@@ -25,6 +25,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async></script>
   <style>
@@ -232,14 +233,101 @@
     .toast { position: fixed; top: calc(var(--st) + 12px); right: 18px; background: var(--surf2); border: 1px solid var(--border); color: var(--dim); font-size: 13px; padding: 8px 14px; border-radius: 24px; font-family: 'DM Mono', monospace; opacity: 0; transition: opacity 0.2s; z-index: 300; pointer-events: none; }
     .toast.on { opacity: 1; }
     .empty { text-align: center; padding: 80px 32px; color: var(--muted); font-size: 16px; line-height: 2.2; }
+
+    /* ─── Sheety site-bar ─── */
+    #site-bar {
+      flex-shrink: 0;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      background: #18181b;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      z-index: 50;
+    }
+    #site-bar a {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+    }
+    #site-bar a:hover { color: #fff; }
+    #site-bar img {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+    }
+    #site-bar-back {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #site-bar-back:hover { color: rgba(255,255,255,0.7); }
+
+    /* ─── Sign-in footer ─── */
+    #signin-footer {
+      flex-shrink: 0;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: #18181b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    #signin-footer a, #signin-footer span {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      text-decoration: none;
+      transition: color 0.15s;
+      letter-spacing: 0.02em;
+    }
+    #signin-footer a:hover { color: rgba(255,255,255,0.6); }
+    #signin-footer .dot { width: 2px; height: 2px; border-radius: 50%; background: rgba(255,255,255,0.2); display: inline-block; }
+
+    /* ─── Root layout tweak ─── */
+    #root {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    #signin { flex: 1; height: auto; }
+    #loading { flex: 1; height: auto; }
+    #app { flex: 1; height: auto; min-height: 0; }
   </style>
 </head>
 <body>
 
+<div id="root">
+
+<!-- Site bar -->
+<header id="site-bar">
+  <a href="https://sheety.tools" aria-label="Sheety Tools home">
+    <img src="https://sheety.tools/Sheety_Logo.png" alt="" aria-hidden="true">
+    Sheety Tools
+  </a>
+  <a href="https://sheety.tools" id="site-bar-back">← All tools</a>
+</header>
+
+
 <!-- Sign-in -->
 <div id="signin">
   <div class="signin-logo">
-    <h1>My Sheety List</h1>
+    <h1>Sheety List</h1>
     <p>BY SHEETY.TOOLS</p>
   </div>
   <p class="signin-desc">Sign in with Google and we'll create your task sheet automatically — nothing to set up.</p>
@@ -264,7 +352,7 @@
 <!-- App -->
 <div id="app">
   <div class="hdr">
-    <span class="hdr-title">My Sheety List</span>
+    <span class="hdr-title">Sheety List</span>
     <button class="icon-btn" id="refresh-btn" onclick="refreshTasks()" title="Refresh">↻</button>
     <button class="icon-btn" onclick="toggleSearch()" title="Search">🔍</button>
     <button class="icon-btn" onclick="openManageCats()" title="Categories">⚙️</button>
@@ -288,7 +376,7 @@
   <div id="kofi-banner">
     <div class="kofi-icon">☕</div>
     <div class="kofi-body">
-      <div class="kofi-title">Enjoying My Sheety List?</div>
+      <div class="kofi-title">Enjoying Sheety List?</div>
       <div class="kofi-desc">It's free and always will be. If it's been useful, a coffee goes a long way.</div>
       <a class="kofi-link" href="https://ko-fi.com/sheetytools" target="_blank">Fuel Sheety on Ko-fi →</a>
     </div>
@@ -442,7 +530,7 @@
 const SHEETS = (() => {
   const CLIENT_ID = '969172561435-26vhc1610cf9ggnqmsro406mkfb451j1.apps.googleusercontent.com';
   const SCOPE     = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
-  const TITLE     = 'My Sheety List';
+  const TITLE     = 'Sheety List';
   const TASK_TAB  = 'Tasks';
   const CAT_TAB   = 'Categories';
   const TASK_HDRS = ['category','group','title','priority','due','notes','frequency','last_completed','completed','snooze_until'];
@@ -510,7 +598,7 @@ const SHEETS = (() => {
       // Seed PWA recommendation task
       await api(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${TASK_TAB}!A2:I2?valueInputOption=RAW`,
         { method:'PUT', body:JSON.stringify({ values:[[
-          'Productivity','Tips','Try the My Sheety List app on your phone — add it to your home screen for the full experience!',
+          'Productivity','Tips','Try the Sheety List app on your phone — add it to your home screen for the full experience!',
           'Med','','','','',''
         ]]}) });
     }
@@ -1336,5 +1424,18 @@ function openEditFromBriefing(rowId) {
     navigator.serviceWorker.register('sw.js').catch(console.error);
   }
 </script>
+
+<!-- Sign-in footer -->
+<footer id="signin-footer">
+  <span>© 2026 Sheety Tools</span>
+  <span class="dot"></span>
+  <a href="https://sheety.tools/terms.html" target="_blank" rel="noopener">Terms</a>
+  <span class="dot"></span>
+  <a href="https://ko-fi.com/sheetytools" target="_blank" rel="noopener">☕ Ko-fi</a>
+  <span class="dot"></span>
+  <a href="https://sheety.tools" target="_blank" rel="noopener">sheety.tools</a>
+</footer>
+
+</div><!-- /#root -->
 </body>
 </html>
