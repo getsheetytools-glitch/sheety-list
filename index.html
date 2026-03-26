@@ -839,10 +839,21 @@ function renderNav() {
       <div class="nav-dot" style="${on?'background:#ff3b30':''}"></div>⚠ OVERDUE
     </button>`;
   }
+  const snoozedCount = S.tasks.filter(t=>isSnoozedUntil(t)).length;
+  if (snoozedCount > 0) {
+    const on = S.cat==='__snoozed__';
+    html += `<button class="nav-tab ${on?'on':''}" style="${on?'color:#a855f7':''}" onclick="setCat('__snoozed__')">
+      <div class="nav-dot" style="${on?'background:#a855f7':''}"></div>💤 SNOOZED
+    </button>`;
+  }
   document.getElementById('bot-nav').innerHTML = html;
 }
 
 function renderPills() {
+  if (S.cat === '__snoozed__' || S.cat === '__overdue__') {
+    document.getElementById('pills').innerHTML = '';
+    return;
+  }
   const groups=['All',...new Set(S.tasks.filter(t=>t.category===S.cat).map(t=>t.group).filter(Boolean))];
   const col=catColor(S.cat);
   const cnt={};
@@ -908,6 +919,35 @@ function renderList() {
       <div class="task-list">${overdue.map(t=>cardHtml(t)).join('')}</div>
     </div>`;
     overdue.forEach(t=>attachSwipe(t._row));
+    return;
+  }
+
+  if (S.cat === '__snoozed__') {
+    const snoozed = S.tasks.filter(t=>isSnoozedUntil(t))
+      .sort((a,b)=>new Date(a.snooze_until)-new Date(b.snooze_until));
+    if (!snoozed.length) {
+      document.getElementById('task-list').innerHTML=`<div class="empty">No snoozed tasks 💤</div>`;
+      return;
+    }
+    document.getElementById('task-list').innerHTML = `<div class="group-sec">
+      <div class="group-hdr">
+        <span class="group-lbl" style="color:#a855f7">SNOOZED</span>
+        <div class="group-line" style="color:#a855f7"></div>
+        <span class="group-cnt">${snoozed.length}</span>
+      </div>
+      <div class="task-list">${snoozed.map(t=>`
+        <div class="card" style="opacity:0.6;border-left:3px solid #a855f720;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <div style="font-size:15px;color:var(--fg);flex:1;">${t.title}</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+              <span style="font-size:12px;color:#a855f7;">💤 ${fmtDue(t.snooze_until)}</span>
+              <button onclick="clearSnoozeById(${t._row})" style="background:#a855f720;border:none;color:#a855f7;font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;">clear</button>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--dim);margin-top:4px;">${t.category}${t.group?' · '+t.group:''}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
     return;
   }
 
@@ -1170,6 +1210,14 @@ async function clearSnooze() {
   const t = S.tasks.find(t=>t._row===snoozeTargetId); if (!t) return;
   t.snooze_until = '';
   closeSheets(); toast('snooze cleared ✓');
+  try { await SHEETS.updateTask(t); } catch(e) { console.error(e); alert('Save failed.'); }
+  render();
+}
+
+async function clearSnoozeById(rowId) {
+  const t = S.tasks.find(t=>t._row===rowId); if (!t) return;
+  t.snooze_until = '';
+  toast('snooze cleared ✓');
   try { await SHEETS.updateTask(t); } catch(e) { console.error(e); alert('Save failed.'); }
   render();
 }
