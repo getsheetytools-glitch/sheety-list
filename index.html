@@ -25,8 +25,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async></script>
   <style>
     :root {
@@ -44,14 +43,14 @@
       --st: env(safe-area-inset-top, 0px);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px; }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Manrope', sans-serif; font-size: 16px; }
 
     /* ── Sign-in ── */
     #signin { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 48px 32px; gap: 32px; }
-    .signin-logo h1 { font-family: 'Lora', serif; font-size: 42px; font-weight: 600; text-align: center; }
+    .signin-logo h1 { font-family: 'Manrope', sans-serif; font-size: 42px; font-weight: 600; text-align: center; }
     .signin-logo p  { font-size: 13px; color: var(--muted); letter-spacing: 0.12em; text-align: center; margin-top: 6px; }
     .signin-desc    { font-size: 16px; color: var(--dim); text-align: center; line-height: 1.8; max-width: 300px; }
-    .google-btn     { display: flex; align-items: center; gap: 16px; background: var(--surf2); border: 1px solid var(--border); color: var(--text); padding: 20px 36px; border-radius: 16px; font-family: 'DM Mono', monospace; font-size: 17px; cursor: pointer; letter-spacing: 0.04em; }
+    .google-btn     { display: flex; align-items: center; gap: 16px; background: var(--surf2); border: 1px solid var(--border); color: var(--text); padding: 20px 36px; border-radius: 16px; font-family: 'Manrope', sans-serif; font-size: 17px; cursor: pointer; letter-spacing: 0.01em; }
     .google-btn:active { transform: scale(0.97); }
     .g-icon { width: 24px; height: 24px; flex-shrink: 0; }
     .signin-footer  { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.8; }
@@ -67,7 +66,7 @@
 
     /* Header */
     .hdr       { display: flex; align-items: center; gap: 10px; padding: 18px 18px 0; flex-shrink: 0; }
-    .hdr-title { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; flex: 1; }
+    .hdr-title { font-family: 'Manrope', sans-serif; font-size: 28px; font-weight: 600; flex: 1; }
     .icon-btn  { width: 48px; height: 48px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); color: var(--dim); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; flex-shrink: 0; padding: 0; transition: all 0.15s; }
     .icon-btn:active { transform: scale(0.9); background: var(--surf2); }
     .add-btn   { background: var(--green); border-color: var(--green); color: #fff; font-size: 26px; }
@@ -75,14 +74,14 @@
     /* Search */
     #search-bar { display: none; padding: 12px 18px; flex-shrink: 0; }
     #search-bar.on { display: block; }
-    .search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px 18px; border-radius: 14px; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; }
+    .search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px 18px; border-radius: 14px; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; }
     .search-input:focus { border-color: var(--green); }
     .search-input::placeholder { color: var(--muted); }
 
     /* Pills */
     .pills { display: flex; gap: 8px; padding: 12px 18px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
     .pills::-webkit-scrollbar { display: none; }
-    .pill { background: transparent; border: 1px solid #252535; color: var(--muted); padding: 8px 18px; border-radius: 24px; font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.04em; white-space: nowrap; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+    .pill { background: transparent; border: 1px solid #252535; color: var(--muted); padding: 8px 18px; border-radius: 24px; font-family: 'Manrope', sans-serif; font-size: 13px; letter-spacing: 0.01em; white-space: nowrap; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
     .pill.on { background: var(--surface); }
 
     /* Overdue banner */
@@ -116,7 +115,7 @@
     .card-top   { display: flex; align-items: flex-start; gap: 12px; }
     .card-title { flex: 1; font-size: 17px; color: var(--text); line-height: 1.4; }
     .card-meta  { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; max-width: 150px; }
-    .badge      { font-size: 11px; padding: 4px 9px; border-radius: 5px; font-family: 'DM Mono', monospace; letter-spacing: 0.05em; font-weight: 500; white-space: nowrap; }
+    .badge      { font-size: 11px; padding: 4px 9px; border-radius: 5px; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; font-weight: 500; white-space: nowrap; }
     .due-lbl    { font-size: 13px; color: var(--muted); white-space: nowrap; }
     .due-lbl.late { color: var(--crit); }
     .freq-lbl   { font-size: 11px; color: #3a3a4a; background: #ffffff08; padding: 3px 7px; border-radius: 5px; white-space: nowrap; }
@@ -125,13 +124,13 @@
     /* Card actions */
     .card-actions { display: none; padding-top: 13px; margin-top: 12px; border-top: 1px solid var(--border); gap: 8px; flex-wrap: wrap; }
     .card-actions.on { display: flex; }
-    .act-btn    { background: var(--surf2); border: 1px solid var(--border); color: var(--dim); padding: 10px 15px; border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .act-btn    { background: var(--surf2); border: 1px solid var(--border); color: var(--dim); padding: 10px 15px; border-radius: 10px; font-family: 'Manrope', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.15s; }
     .act-btn:active { transform: scale(0.94); }
 
     /* Bottom nav */
     .bot-nav    { display: flex; border-top: 1px solid var(--border); flex-shrink: 0; padding-bottom: var(--sb); background: var(--bg); overflow-x: auto; scrollbar-width: none; }
     .bot-nav::-webkit-scrollbar { display: none; }
-    .nav-tab    { flex: 0 0 auto; min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 14px 10px; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.05em; gap: 6px; transition: color 0.15s; white-space: nowrap; }
+    .nav-tab    { flex: 0 0 auto; min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 14px 10px; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.02em; gap: 6px; transition: color 0.15s; white-space: nowrap; }
     .nav-tab.on { color: var(--text); }
     .nav-dot    { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0; transition: opacity 0.15s; }
     .nav-tab.on .nav-dot { opacity: 1; }
@@ -142,18 +141,18 @@
     .bsheet     { position: fixed; bottom: 0; left: 0; right: 0; background: #16162a; border-radius: 24px 24px 0 0; border-top: 1px solid var(--border); z-index: 101; transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.32,0.72,0,1); padding-bottom: calc(var(--sb) + 12px); max-height: 92vh; overflow-y: auto; }
     .bsheet.on  { transform: translateY(0); }
     .sheet-handle { width: 40px; height: 5px; background: var(--border); border-radius: 3px; margin: 16px auto 22px; }
-    .sheet-ttl  { font-family: 'Lora', serif; font-size: 22px; padding: 0 24px 18px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+    .sheet-ttl  { font-family: 'Manrope', sans-serif; font-size: 22px; padding: 0 24px 18px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
 
     /* Fields */
     .field       { padding: 0 24px; margin-bottom: 18px; }
     .field-lbl   { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 15px 16px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; }
+    .field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 15px 16px; border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; }
     .field-input:focus { border-color: var(--green); }
     select.field-input { appearance: none; cursor: pointer; }
 
     /* Category combo */
     .cat-combo  { position: relative; }
-    .cat-input  { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 15px 16px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; }
+    .cat-input  { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 15px 16px; border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; }
     .cat-input:focus { border-color: var(--green); }
     .cat-drop   { position: absolute; left: 0; right: 0; top: 100%; margin-top: 6px; background: #1e1e32; border: 1px solid var(--border); border-radius: 12px; z-index: 200; display: none; max-height: 240px; overflow-y: auto; }
     .cat-drop.on { display: block; }
@@ -164,12 +163,12 @@
 
     /* Priority seg */
     .seg        { display: flex; gap: 6px; }
-    .seg-btn    { flex: 1; padding: 13px 4px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--dim); font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .seg-btn    { flex: 1; padding: 13px 4px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--dim); font-family: 'Manrope', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.15s; text-align: center; }
     .seg-btn.on { background: var(--surf2); color: var(--text); border-color: #555; }
 
     /* Sheet buttons */
     .sheet-btns { display: flex; gap: 14px; padding: 18px 24px 8px; }
-    .sht-btn    { flex: 1; padding: 17px; border-radius: 14px; border: none; font-family: 'DM Mono', monospace; font-size: 16px; cursor: pointer; transition: all 0.15s; }
+    .sht-btn    { flex: 1; padding: 17px; border-radius: 14px; border: none; font-family: 'Manrope', sans-serif; font-size: 16px; cursor: pointer; transition: all 0.15s; }
     .sht-btn:active { transform: scale(0.97); }
     .sht-btn.pri { background: var(--green); color: #fff; }
     .sht-btn.sec { background: var(--surface); color: var(--dim); border: 1px solid var(--border); }
@@ -180,9 +179,9 @@
     .cat-name      { flex: 1; font-size: 17px; }
     .cat-del       { font-size: 26px; color: var(--muted); cursor: pointer; padding: 4px 8px; }
     .new-cat-row   { display: flex; gap: 12px; padding: 16px 24px; }
-    .new-cat-input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; }
+    .new-cat-input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 16px; outline: none; }
     .new-cat-input:focus { border-color: var(--green); }
-    .new-cat-btn   { background: var(--green); color: #fff; border: none; padding: 14px 20px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 16px; cursor: pointer; }
+    .new-cat-btn   { background: var(--green); color: #fff; border: none; padding: 14px 20px; border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 16px; cursor: pointer; }
 
     /* Color picker */
     .color-opts { display: flex; gap: 12px; flex-wrap: wrap; padding: 4px 0; }
@@ -199,7 +198,7 @@
     .kofi-body  { flex: 1; }
     .kofi-title { font-size: 14px; color: #c084fc; margin-bottom: 5px; }
     .kofi-desc  { font-size: 13px; color: var(--dim); line-height: 1.7; }
-    .kofi-link  { display: inline-block; margin-top: 8px; background: #a855f7; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; text-decoration: none; letter-spacing: 0.04em; }
+    .kofi-link  { display: inline-block; margin-top: 8px; background: #a855f7; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; text-decoration: none; letter-spacing: 0.01em; }
     .kofi-close { font-size: 26px; color: var(--muted); cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
 
     /* Category settings */
@@ -218,7 +217,7 @@
     .overdue-task-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
     /* Briefing button */
-    #briefing-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 18px 2px; padding: 13px; background: #0f1a14; border: 1px solid #10b98150; border-radius: 14px; color: var(--green); font-family: 'DM Mono', monospace; font-size: 14px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s; flex-shrink: 0; width: calc(100% - 36px); }
+    #briefing-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 18px 2px; padding: 13px; background: #0f1a14; border: 1px solid #10b98150; border-radius: 14px; color: var(--green); font-family: 'Manrope', sans-serif; font-size: 14px; cursor: pointer; letter-spacing: 0.01em; transition: all 0.15s; flex-shrink: 0; width: calc(100% - 36px); }
     #briefing-btn:active { background: #131f18; transform: scale(0.98); }
 
     /* Briefing content */
@@ -230,7 +229,7 @@
     .briefing-empty { font-size: 13px; color: var(--muted); font-style: italic; padding: 8px 0; }
 
     /* Toast */
-    .toast { position: fixed; top: calc(var(--st) + 12px); right: 18px; background: var(--surf2); border: 1px solid var(--border); color: var(--dim); font-size: 13px; padding: 8px 14px; border-radius: 24px; font-family: 'DM Mono', monospace; opacity: 0; transition: opacity 0.2s; z-index: 300; pointer-events: none; }
+    .toast { position: fixed; top: calc(var(--st) + 12px); right: 18px; background: var(--surf2); border: 1px solid var(--border); color: var(--dim); font-size: 13px; padding: 8px 14px; border-radius: 24px; font-family: 'Manrope', sans-serif; opacity: 0; transition: opacity 0.2s; z-index: 300; pointer-events: none; }
     .toast.on { opacity: 1; }
     .empty { text-align: center; padding: 80px 32px; color: var(--muted); font-size: 16px; line-height: 2.2; }
 
@@ -251,7 +250,7 @@
       display: flex;
       align-items: center;
       gap: 7px;
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: 'Manrope', sans-serif;
       font-size: 13px;
       font-weight: 700;
       color: rgba(255,255,255,0.85);
@@ -265,7 +264,7 @@
       border-radius: 5px;
     }
     #site-bar-back {
-      font-family: 'DM Mono', monospace;
+      font-family: 'Manrope', sans-serif;
       font-size: 11px;
       color: rgba(255,255,255,0.4);
       text-decoration: none;
@@ -427,8 +426,8 @@
 <div class="bsheet" id="briefing-sheet">
   <div class="sheet-handle"></div>
   <div style="display:flex;align-items:center;padding:0 24px 16px;border-bottom:1px solid var(--border);margin-bottom:0;">
-    <span style="font-family:'Lora',serif;font-size:20px;flex:1;">☀ Today's Briefing</span>
-    <button onclick="shuffleBriefing()" style="background:var(--surf2);border:1px solid var(--border);color:var(--dim);padding:8px 14px;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:0.04em;">⇄ Shuffle</button>
+    <span style="font-family:'Manrope',sans-serif;font-size:20px;flex:1;">☀ Today's Briefing</span>
+    <button onclick="shuffleBriefing()" style="background:var(--surf2);border:1px solid var(--border);color:var(--dim);padding:8px 14px;border-radius:10px;font-family:'Manrope',sans-serif;font-size:12px;cursor:pointer;letter-spacing:0.01em;">⇄ Shuffle</button>
   </div>
   <div id="briefing-content" style="padding: 8px 24px 8px;"></div>
   <div class="sheet-btns">
